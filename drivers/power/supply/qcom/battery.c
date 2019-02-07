@@ -811,7 +811,7 @@ stepper_exit:
 
 	if (reschedule_ms) {
 		queue_delayed_work(system_power_efficient_wq,
-		&chip->fcc_stepper_work,
+			&chip->fcc_stepper_work,
 				msecs_to_jiffies(reschedule_ms));
 		pr_debug("Rescheduling FCC_STEPPER work\n");
 		return;
@@ -930,7 +930,7 @@ static int usb_icl_vote_callback(struct votable *votable, void *data,
 	else
 		queue_delayed_work(system_power_efficient_wq,
 			&chip->status_change_work,
-						msecs_to_jiffies(PL_DELAY_MS));
+				msecs_to_jiffies(PL_DELAY_MS));
 
 	/* rerun AICL */
 	/* get the settled current */
@@ -1074,8 +1074,7 @@ static int pl_disable_vote_callback(struct votable *votable,
 				vote(chip->pl_awake_votable, FCC_STEPPER_VOTER,
 					true, 0);
 				queue_delayed_work(system_power_efficient_wq,
-				&chip->fcc_stepper_work,
-					0);
+					&chip->fcc_stepper_work,0);
 				}
 		} else {
 			/*
@@ -1207,16 +1206,16 @@ static int pl_disable_vote_callback(struct votable *votable,
 				vote(chip->pl_awake_votable, FCC_STEPPER_VOTER,
 					true, 0);
 				queue_delayed_work(system_power_efficient_wq,
-				&chip->fcc_stepper_work,
-					0);
+					&chip->fcc_stepper_work,0);
 			}
 		}
 
 		rerun_election(chip->fv_votable);
 
 		cancel_delayed_work_sync(&chip->pl_awake_work);
-		schedule_delayed_work(&chip->pl_awake_work,
-						msecs_to_jiffies(5000));
+		queue_delayed_work(system_power_efficient_wq,
+			&chip->pl_awake_work,
+				msecs_to_jiffies(5000));
 	}
 
 	/* notify parallel state change */
@@ -1549,7 +1548,7 @@ static int pl_notifier_call(struct notifier_block *nb,
 	    || (strcmp(psy->desc->name, "battery") == 0)
 	    || (strcmp(psy->desc->name, "main") == 0))
 		queue_delayed_work(system_power_efficient_wq,
-		&chip->status_change_work, 0);
+			&chip->status_change_work, 0);
 
 	return NOTIFY_OK;
 }

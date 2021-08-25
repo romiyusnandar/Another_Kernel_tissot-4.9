@@ -808,7 +808,7 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			dump_tasks(NULL, NULL);
 		}
 
-		lowmem_deathpending_timeout = jiffies + HZ;
+		lowmem_deathpending_timeout = jiffies + msecs_to_jiffies(1000);
 		rem += selected_tasksize;
 		rcu_read_unlock();
 		/* give the system time to free up the memory */

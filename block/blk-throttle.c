@@ -19,7 +19,7 @@ static int throtl_grp_quantum = 8;
 static int throtl_quantum = 32;
 
 /* Throttling is performed over 100ms slice and after that slice is renewed */
-static unsigned long throtl_slice = HZ/10;	/* 100 ms */
+static unsigned long throtl_slice = 100;	/* 100 ms */
 
 static struct blkcg_policy blkcg_policy_throtl;
 
@@ -499,7 +499,7 @@ static void throtl_dequeue_tg(struct throtl_grp *tg)
 static void throtl_schedule_pending_timer(struct throtl_service_queue *sq,
 					  unsigned long expires)
 {
-	unsigned long max_expire = jiffies + 8 * throtl_slice;
+	unsigned long max_expire = jiffies + 8 * msecs_to_jiffies(throtl_slice);
 
 	/*
 	 * Since we are adjusting the throttle limit dynamically, the sleep
@@ -567,7 +567,7 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
 	if (time_after_eq(start, tg->slice_start[rw]))
 		tg->slice_start[rw] = start;
 
-	tg->slice_end[rw] = jiffies + throtl_slice;
+	tg->slice_end[rw] = jiffies + msecs_to_jiffies(throtl_slice);
 	throtl_log(&tg->service_queue,
 		   "[%c] new slice with credit start=%lu end=%lu jiffies=%lu",
 		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
@@ -579,7 +579,7 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
 	tg->bytes_disp[rw] = 0;
 	tg->io_disp[rw] = 0;
 	tg->slice_start[rw] = jiffies;
-	tg->slice_end[rw] = jiffies + throtl_slice;
+	tg->slice_end[rw] = jiffies + msecs_to_jiffies(throtl_slice);
 	throtl_log(&tg->service_queue,
 		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
 		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
@@ -589,13 +589,13 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
 static inline void throtl_set_slice_end(struct throtl_grp *tg, bool rw,
 					unsigned long jiffy_end)
 {
-	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
+	tg->slice_end[rw] = roundup(jiffy_end, msecs_to_jiffies(throtl_slice));
 }
 
 static inline void throtl_extend_slice(struct throtl_grp *tg, bool rw,
 				       unsigned long jiffy_end)
 {
-	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
+	tg->slice_end[rw] = roundup(jiffy_end, msecs_to_jiffies(throtl_slice));
 	throtl_log(&tg->service_queue,
 		   "[%c] extend slice start=%lu end=%lu jiffies=%lu",
 		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
@@ -635,19 +635,19 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
 	 * is bad because it does not allow new slice to start.
 	 */
 
-	throtl_set_slice_end(tg, rw, jiffies + throtl_slice);
+	throtl_set_slice_end(tg, rw, jiffies + msecs_to_jiffies(throtl_slice));
 
 	time_elapsed = jiffies - tg->slice_start[rw];
 
-	nr_slices = time_elapsed / throtl_slice;
+	nr_slices = time_elapsed / msecs_to_jiffies(throtl_slice);
 
 	if (!nr_slices)
 		return;
-	tmp = tg->bps[rw] * throtl_slice * nr_slices;
-	do_div(tmp, HZ);
+	tmp = tg->bps[rw] * msecs_to_jiffies(throtl_slice) * nr_slices;
+	do_div(tmp, msecs_to_jiffies(1000));
 	bytes_trim = tmp;
 
-	io_trim = (tg->iops[rw] * throtl_slice * nr_slices)/HZ;
+	io_trim = (tg->iops[rw] * msecs_to_jiffies(throtl_slice) * nr_slices)/msecs_to_jiffies(1000);
 
 	if (!bytes_trim && !io_trim)
 		return;
@@ -662,7 +662,7 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
 	else
 		tg->io_disp[rw] = 0;
 
-	tg->slice_start[rw] += nr_slices * throtl_slice;
+	tg->slice_start[rw] += nr_slices * msecs_to_jiffies(throtl_slice);
 
 	throtl_log(&tg->service_queue,
 		   "[%c] trim slice nr=%lu bytes=%llu io=%lu start=%lu end=%lu jiffies=%lu",
@@ -682,9 +682,9 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
 
 	/* Slice has just started. Consider one slice interval */
 	if (!jiffy_elapsed)
-		jiffy_elapsed_rnd = throtl_slice;
+		jiffy_elapsed_rnd = msecs_to_jiffies(throtl_slice);
 
-	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, throtl_slice);
+	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, msecs_to_jiffies(throtl_slice));
 
 	/*
 	 * jiffy_elapsed_rnd should not be a big value as minimum iops can be
@@ -694,7 +694,7 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
 	 */
 
 	tmp = (u64)tg->iops[rw] * jiffy_elapsed_rnd;
-	do_div(tmp, HZ);
+	do_div(tmp, msecs_to_jiffies(1000));
 
 	if (tmp > UINT_MAX)
 		io_allowed = UINT_MAX;
@@ -708,7 +708,7 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
 	}
 
 	/* Calc approx time to dispatch */
-	jiffy_wait = ((tg->io_disp[rw] + 1) * HZ)/tg->iops[rw] + 1;
+	jiffy_wait = ((tg->io_disp[rw] + 1) * msecs_to_jiffies(1000))/tg->iops[rw] + 1;
 
 	if (jiffy_wait > jiffy_elapsed)
 		jiffy_wait = jiffy_wait - jiffy_elapsed;
@@ -731,12 +731,12 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
 
 	/* Slice has just started. Consider one slice interval */
 	if (!jiffy_elapsed)
-		jiffy_elapsed_rnd = throtl_slice;
+		jiffy_elapsed_rnd = msecs_to_jiffies(throtl_slice);
 
-	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, throtl_slice);
+	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, msecs_to_jiffies(throtl_slice));
 
 	tmp = tg->bps[rw] * jiffy_elapsed_rnd;
-	do_div(tmp, HZ);
+	do_div(tmp, msecs_to_jiffies(1000));
 	bytes_allowed = tmp;
 
 	if (tg->bytes_disp[rw] + bio->bi_iter.bi_size <= bytes_allowed) {
@@ -747,7 +747,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
 
 	/* Calc approx time to dispatch */
 	extra_bytes = tg->bytes_disp[rw] + bio->bi_iter.bi_size - bytes_allowed;
-	jiffy_wait = div64_u64(extra_bytes * HZ, tg->bps[rw]);
+	jiffy_wait = div64_u64(extra_bytes * msecs_to_jiffies(1000), tg->bps[rw]);
 
 	if (!jiffy_wait)
 		jiffy_wait = 1;
@@ -798,8 +798,8 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
 	if (throtl_slice_used(tg, rw) && !(tg->service_queue.nr_queued[rw]))
 		throtl_start_new_slice(tg, rw);
 	else {
-		if (time_before(tg->slice_end[rw], jiffies + throtl_slice))
-			throtl_extend_slice(tg, rw, jiffies + throtl_slice);
+		if (time_before(tg->slice_end[rw], jiffies + msecs_to_jiffies(throtl_slice)))
+			throtl_extend_slice(tg, rw, jiffies + msecs_to_jiffies(throtl_slice));
 	}
 
 	if (tg_with_in_bps_limit(tg, bio, &bps_wait) &&

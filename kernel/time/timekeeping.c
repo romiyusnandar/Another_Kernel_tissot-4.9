@@ -144,7 +144,7 @@ static inline u64 tk_clock_read(struct tk_read_base *tkr)
 }
 
 #ifdef CONFIG_DEBUG_TIMEKEEPING
-#define WARNING_FREQ (HZ*300) /* 5 minute rate-limiting */
+#define WARNING_FREQ 300000 /* 5 minute rate-limiting */
 
 static void timekeeping_check_update(struct timekeeper *tk, cycle_t offset)
 {
@@ -165,7 +165,7 @@ static void timekeeping_check_update(struct timekeeper *tk, cycle_t offset)
 	}
 
 	if (tk->underflow_seen) {
-		if (jiffies - tk->last_warning > WARNING_FREQ) {
+		if (jiffies - tk->last_warning > msecs_to_jiffies(WARNING_FREQ)) {
 			printk_deferred("WARNING: Underflow in clocksource '%s' observed, time update ignored.\n", name);
 			printk_deferred("         Please report this, consider using a different clocksource, if possible.\n");
 			printk_deferred("         Your kernel is probably still fine.\n");
@@ -175,7 +175,7 @@ static void timekeeping_check_update(struct timekeeper *tk, cycle_t offset)
 	}
 
 	if (tk->overflow_seen) {
-		if (jiffies - tk->last_warning > WARNING_FREQ) {
+		if (jiffies - tk->last_warning > msecs_to_jiffies(WARNING_FREQ)) {
 			printk_deferred("WARNING: Overflow in clocksource '%s' observed, time update capped.\n", name);
 			printk_deferred("         Please report this, consider using a different clocksource, if possible.\n");
 			printk_deferred("         Your kernel is probably still fine.\n");

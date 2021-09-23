@@ -254,9 +254,9 @@ EXPORT_SYMBOL(current_fs_time);
 unsigned int jiffies_to_msecs(const unsigned long j)
 {
 #if HZ <= MSEC_PER_SEC && !(MSEC_PER_SEC % HZ)
-	return (MSEC_PER_SEC / HZ) * j;
+	return (MSEC_PER_SEC / msecs_to_jiffies(1000)) * j;
 #elif HZ > MSEC_PER_SEC && !(HZ % MSEC_PER_SEC)
-	return (j + (HZ / MSEC_PER_SEC) - 1)/(HZ / MSEC_PER_SEC);
+	return (j + (msecs_to_jiffies(1000) / MSEC_PER_SEC) - 1)/(msecs_to_jiffies(1000) / MSEC_PER_SEC);
 #else
 # if BITS_PER_LONG == 32
 	return (HZ_TO_MSEC_MUL32 * j + (1ULL << HZ_TO_MSEC_SHR32) - 1) >>
@@ -274,10 +274,10 @@ unsigned int jiffies_to_usecs(const unsigned long j)
 	 * Hz usually doesn't go much further MSEC_PER_SEC.
 	 * jiffies_to_usecs() and usecs_to_jiffies() depend on that.
 	 */
-	BUILD_BUG_ON(HZ > USEC_PER_SEC);
+	BUILD_BUG_ON(msecs_to_jiffies(1000) > USEC_PER_SEC);
 
 #if !(USEC_PER_SEC % HZ)
-	return (USEC_PER_SEC / HZ) * j;
+	return (USEC_PER_SEC / msecs_to_jiffies(1000)) * j;
 #else
 # if BITS_PER_LONG == 32
 	return (HZ_TO_USEC_MUL32 * j) >> HZ_TO_USEC_SHR32;
@@ -639,9 +639,9 @@ clock_t jiffies_to_clock_t(unsigned long x)
 {
 #if (TICK_NSEC % (NSEC_PER_SEC / USER_HZ)) == 0
 # if HZ < USER_HZ
-	return x * (USER_HZ / HZ);
+	return x * (USER_HZ / msecs_to_jiffies(1000));
 # else
-	return x / (HZ / USER_HZ);
+	return x / (msecs_to_jiffies(1000) / USER_HZ);
 # endif
 #else
 	return div_u64((u64)x * TICK_NSEC, NSEC_PER_SEC / USER_HZ);
@@ -652,16 +652,16 @@ EXPORT_SYMBOL(jiffies_to_clock_t);
 unsigned long clock_t_to_jiffies(unsigned long x)
 {
 #if (HZ % USER_HZ)==0
-	if (x >= ~0UL / (HZ / USER_HZ))
+	if (x >= ~0UL / (msecs_to_jiffies(1000) / USER_HZ))
 		return ~0UL;
-	return x * (HZ / USER_HZ);
+	return x * (msecs_to_jiffies(1000) / USER_HZ);
 #else
 	/* Don't worry about loss of precision here .. */
-	if (x >= ~0UL / HZ * USER_HZ)
+	if (x >= ~0UL / msecs_to_jiffies(1000) * USER_HZ)
 		return ~0UL;
 
 	/* .. but do try to contain it here */
-	return div_u64((u64)x * HZ, USER_HZ);
+	return div_u64((u64)x * msecs_to_jiffies(1000), USER_HZ);
 #endif
 }
 EXPORT_SYMBOL(clock_t_to_jiffies);
@@ -670,9 +670,9 @@ u64 jiffies_64_to_clock_t(u64 x)
 {
 #if (TICK_NSEC % (NSEC_PER_SEC / USER_HZ)) == 0
 # if HZ < USER_HZ
-	x = div_u64(x * USER_HZ, HZ);
+	x = div_u64(x * USER_HZ, msecs_to_jiffies(1000));
 # elif HZ > USER_HZ
-	x = div_u64(x, HZ / USER_HZ);
+	x = div_u64(x, msecs_to_jiffies(1000) / USER_HZ);
 # else
 	/* Nothing to do */
 # endif
@@ -707,7 +707,7 @@ u64 nsec_to_clock_t(u64 x)
 u64 jiffies64_to_nsecs(u64 j)
 {
 #if !(NSEC_PER_SEC % HZ)
-	return (NSEC_PER_SEC / HZ) * j;
+	return (NSEC_PER_SEC / msecs_to_jiffies(1000)) * j;
 # else
 	return div_u64(j * HZ_TO_NSEC_NUM, HZ_TO_NSEC_DEN);
 #endif
@@ -731,16 +731,16 @@ u64 nsecs_to_jiffies64(u64 n)
 {
 #if (NSEC_PER_SEC % HZ) == 0
 	/* Common case, HZ = 100, 128, 200, 250, 256, 500, 512, 1000 etc. */
-	return div_u64(n, NSEC_PER_SEC / HZ);
+	return div_u64(n, NSEC_PER_SEC / msecs_to_jiffies(1000));
 #elif (HZ % 512) == 0
 	/* overflow after 292 years if HZ = 1024 */
-	return div_u64(n * HZ / 512, NSEC_PER_SEC / 512);
+	return div_u64(n * msecs_to_jiffies(1000) / 512, NSEC_PER_SEC / 512);
 #else
 	/*
 	 * Generic case - optimized for cases where HZ is a multiple of 3.
 	 * overflow after 64.99 years, exact for HZ = 60, 72, 90, 120 etc.
 	 */
-	return div_u64(n * 9, (9ull * NSEC_PER_SEC + HZ / 2) / HZ);
+	return div_u64(n * 9, (9ull * NSEC_PER_SEC + msecs_to_jiffies(500)) / msecs_to_jiffies(1000));
 #endif
 }
 EXPORT_SYMBOL(nsecs_to_jiffies64);

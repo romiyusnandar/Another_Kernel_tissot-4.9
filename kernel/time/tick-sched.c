@@ -905,7 +905,7 @@ static bool can_stop_idle_tick(int cpu, struct tick_sched *ts)
 	}
 
 	if (unlikely(ts->nohz_mode == NOHZ_MODE_INACTIVE)) {
-		ts->sleep_length = (ktime_t) { .tv64 = NSEC_PER_SEC/HZ };
+		ts->sleep_length = (ktime_t) { .tv64 = NSEC_PER_SEC/msecs_to_jiffies(1000) };
 		return false;
 	}
 

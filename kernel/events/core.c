@@ -573,7 +573,7 @@ void perf_sample_event_took(u64 sample_len_ns)
 	WRITE_ONCE(perf_sample_allowed_ns, avg_len);
 	WRITE_ONCE(max_samples_per_tick, max);
 
-	sysctl_perf_event_sample_rate = max * HZ;
+	sysctl_perf_event_sample_rate = max * msecs_to_jiffies(1000);
 	perf_sample_period_ns = NSEC_PER_SEC / sysctl_perf_event_sample_rate;
 
 	if (!irq_work_queue(&perf_duration_work)) {
@@ -1053,7 +1053,7 @@ list_update_cgroup_event(struct perf_event *event,
  * set default to be dependent on timer tick just
  * like original code
  */
-#define PERF_CPU_HRTIMER (1000 / HZ)
+#define PERF_CPU_HRTIMER 1
 /*
  * function must be called with interrupts disbled
  */
@@ -1093,7 +1093,7 @@ static void __perf_mux_hrtimer_init(struct perf_cpu_context *cpuctx, int cpu)
 	 */
 	interval = pmu->hrtimer_interval_ms;
 	if (interval < 1)
-		interval = pmu->hrtimer_interval_ms = PERF_CPU_HRTIMER;
+		interval = pmu->hrtimer_interval_ms = msecs_to_jiffies(PERF_CPU_HRTIMER);
 
 	cpuctx->hrtimer_interval = ns_to_ktime(NSEC_PER_MSEC * interval);
 
@@ -4076,7 +4076,7 @@ static void unaccount_event(struct perf_event *event)
 
 	if (dec) {
 		if (!atomic_add_unless(&perf_sched_count, -1, 1))
-			schedule_delayed_work(&perf_sched_work, HZ);
+			schedule_delayed_work(&perf_sched_work, msecs_to_jiffies(1000));
 	}
 
 	unaccount_event_cpu(event, event->cpu);

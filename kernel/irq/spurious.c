@@ -18,7 +18,7 @@
 
 static int irqfixup __read_mostly;
 
-#define POLL_SPURIOUS_IRQ_INTERVAL (HZ/10)
+#define POLL_SPURIOUS_IRQ_INTERVAL 100
 static void poll_spurious_irqs(unsigned long dummy);
 static DEFINE_TIMER(poll_spurious_irq_timer, poll_spurious_irqs, 0, 0);
 static int irq_poll_cpu;
@@ -170,7 +170,7 @@ static void poll_spurious_irqs(unsigned long dummy)
 out:
 	atomic_dec(&irq_poll_active);
 	mod_timer(&poll_spurious_irq_timer,
-		  jiffies + POLL_SPURIOUS_IRQ_INTERVAL);
+		  jiffies + msecs_to_jiffies(POLL_SPURIOUS_IRQ_INTERVAL));
 }
 
 static inline int bad_action_ret(irqreturn_t action_ret)
@@ -388,7 +388,7 @@ void note_interrupt(struct irq_desc *desc, irqreturn_t action_ret)
 		 * otherwise the counter becomes a doomsday timer for otherwise
 		 * working systems
 		 */
-		if (time_after(jiffies, desc->last_unhandled + HZ/10))
+		if (time_after(jiffies, desc->last_unhandled + msecs_to_jiffies(100)))
 			desc->irqs_unhandled = 1;
 		else
 			desc->irqs_unhandled++;
@@ -421,7 +421,7 @@ void note_interrupt(struct irq_desc *desc, irqreturn_t action_ret)
 		irq_disable(desc);
 
 		mod_timer(&poll_spurious_irq_timer,
-			  jiffies + POLL_SPURIOUS_IRQ_INTERVAL);
+			  jiffies + msecs_to_jiffies(POLL_SPURIOUS_IRQ_INTERVAL));
 	}
 	desc->irqs_unhandled = 0;
 }

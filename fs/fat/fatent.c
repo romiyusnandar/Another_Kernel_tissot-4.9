@@ -92,7 +92,6 @@ static int fat12_ent_bread(struct super_block *sb, struct fat_entry *fatent,
 err_brelse:
 	brelse(bhs[0]);
 err:
-=
 	fat_msg_ratelimit(sb, KERN_ERR, "FAT read failed (blocknr %llu)",
 			  (llu)blocknr);
 	return -EIO;

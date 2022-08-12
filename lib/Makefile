@@ -239,4 +239,7 @@ KASAN_SANITIZE_ubsan.o := n
 CFLAGS_ubsan.o := $(call cc-option, -fno-stack-protector) $(DISABLE_STACKLEAK_PLUGIN)
 
 obj-$(CONFIG_SBITMAP) += sbitmap.o
+
 obj-$(CONFIG_QMI_ENCDEC) += qmi_encdec.o
+
+obj-y += crypto/

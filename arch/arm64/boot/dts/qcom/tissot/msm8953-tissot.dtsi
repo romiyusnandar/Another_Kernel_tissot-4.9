@@ -16,20 +16,6 @@
 #include <dt-bindings/gpio/gpio.h>
 
 / {
-	firmware: firmware {
-		android {
-			fstab {
-				vendor {
-					status = "disable";
-				};
-				system {
-					fsmgr_flags = "wait,slotselect";
-					status = "disable";
-				};
-
-			};
-		};
-	};
 
 	reserved-memory {
 		other_ext_mem: other_ext_region@0 {

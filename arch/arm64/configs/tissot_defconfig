@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 4.9.302 Kernel Configuration
+# Linux/arm64 4.9.325 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -558,7 +558,7 @@ CONFIG_CMDLINE=""
 CONFIG_EFI_STUB=y
 CONFIG_EFI=y
 CONFIG_DMI=y
-CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=y
+# CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE is not set
 CONFIG_IMG_GZ_DTB=y
 # CONFIG_IMG_DTB is not set
 CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME="Image.gz-dtb"

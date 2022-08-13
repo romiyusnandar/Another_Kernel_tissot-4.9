@@ -251,7 +251,7 @@
 				qcom,bus-freq = <3>;
 				qcom,bus-min = <1>;
 				qcom,bus-max = <4>;
-			}
+			};
 			/* XO */
 			qcom,gpu-pwrlevel@8 {
 				reg = <8>;

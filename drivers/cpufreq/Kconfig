@@ -139,6 +139,12 @@ config CPU_FREQ_DEFAULT_GOV_BLU_SCHEDUTIL
 	  have a look at the help section of that governor. The fallback
 	  governor will be 'performance'.
 
+config CPU_FREQ_DEFAULT_GOV_SMARTASS2
+	bool "smartass2"
+	select CPU_FREQ_GOV_SMARTASS2
+	help
+		Use the CPUFreq governor 'smartassV2' as default.
+
 
 endchoice
 
@@ -392,6 +398,14 @@ config CPU_FREQ_GOV_BLU_SCHEDUTIL
 	  be called cpufreq_blu_schedutil.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_SMARTASS2
+	tristate "'smartass2' cpufreq governor"
+	dependsm on CPU_FREQ 
+	help
+		'smartass2' - a "smart" optimized governor!
+
+		If in doubt, say N.
 
 comment "CPU frequency scaling drivers"
 

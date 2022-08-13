@@ -401,7 +401,7 @@ config CPU_FREQ_GOV_BLU_SCHEDUTIL
 
 config CPU_FREQ_GOV_SMARTASS2
 	tristate "'smartass2' cpufreq governor"
-	dependsm on CPU_FREQ 
+	depends on CPU_FREQ 
 	help
 		'smartass2' - a "smart" optimized governor!
 

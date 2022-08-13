@@ -33,7 +33,7 @@ REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 KERNEL="Cakeby"
 RELEASE_VERSION="3.0.4"
 DEVICE="Tissot"
-KERNELTYPE="NonOC-Treble"
+KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="Android 9 - 12.1"
 KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"

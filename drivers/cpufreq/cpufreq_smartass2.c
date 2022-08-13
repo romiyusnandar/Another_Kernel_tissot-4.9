@@ -1,5 +1,5 @@
 /*
- * drivers/cpufreq/cpufreq_smartass2.c
+ * drivers/cpufreq/cpufreq_interactive.c
  *
  * Copyright (C) 2010 Google, Inc.
  *
@@ -37,7 +37,7 @@
 
 static DEFINE_PER_CPU(struct update_util_data, update_util);
 
-struct cpufreq_smartass2_policyinfo {
+struct cpufreq_interactive_policyinfo {
         bool work_in_progress;
         struct irq_work irq_work;
         spinlock_t irq_work_lock; /* protects work_in_progress */
@@ -60,12 +60,12 @@ struct cpufreq_smartass2_policyinfo {
         bool notif_pending;
         unsigned long notif_cpu;
         int governor_enabled;
-        struct cpufreq_smartass2_tunables *cached_tunables;
+        struct cpufreq_interactive_tunables *cached_tunables;
         struct sched_load *sl;
 };
 
 /* Protected by per-policy load_lock */
-struct cpufreq_smartass2_cpuinfo {
+struct cpufreq_interactive_cpuinfo {
         u64 time_in_idle;
         u64 time_in_idle_timestamp;
         u64 cputime_speedadj;
@@ -73,8 +73,8 @@ struct cpufreq_smartass2_cpuinfo {
         unsigned int loadadjfreq;
 };
 
-static DEFINE_PER_CPU(struct cpufreq_smartass2_policyinfo *, polinfo);
-static DEFINE_PER_CPU(struct cpufreq_smartass2_cpuinfo, cpuinfo);
+static DEFINE_PER_CPU(struct cpufreq_interactive_policyinfo *, polinfo);
+static DEFINE_PER_CPU(struct cpufreq_interactive_cpuinfo, cpuinfo);
 
 /* realtime thread handles frequency scaling */
 static struct task_struct *speedchange_task;
@@ -96,7 +96,7 @@ static unsigned int default_target_loads[] = {DEFAULT_TARGET_LOAD};
 static unsigned int default_above_hispeed_delay[] = {
         DEFAULT_ABOVE_HISPEED_DELAY };
 
-struct cpufreq_smartass2_tunables {
+struct cpufreq_interactive_tunables {
         int usage_count;
         /* Hi speed to bump to from lo speed when load burst (default max) */
         unsigned int hispeed_freq;
@@ -167,14 +167,14 @@ struct cpufreq_smartass2_tunables {
 };
 
 /* For cases where we have single governor instance for system */
-static struct cpufreq_smartass2_tunables *common_tunables;
-static struct cpufreq_smartass2_tunables *cached_common_tunables;
+static struct cpufreq_interactive_tunables *common_tunables;
+static struct cpufreq_interactive_tunables *cached_common_tunables;
 
 static struct attribute_group *get_sysfs_attr(void);
 
 /* Round to starting jiffy of next evaluation window */
 static u64 round_to_nw_start(u64 jif,
-                             struct cpufreq_smartass2_tunables *tunables)
+                             struct cpufreq_interactive_tunables *tunables)
 {
         unsigned long step = usecs_to_jiffies(tunables->timer_rate);
         u64 ret;
@@ -190,18 +190,18 @@ static u64 round_to_nw_start(u64 jif,
 }
 
 static inline int set_window_helper(
-                        struct cpufreq_smartass2_tunables *tunables)
+                        struct cpufreq_interactive_tunables *tunables)
 {
         return sched_set_window(round_to_nw_start(get_jiffies_64(), tunables),
                          usecs_to_jiffies(tunables->timer_rate));
 }
 
-static void cpufreq_smartass2_timer_resched(unsigned long cpu,
+static void cpufreq_interactive_timer_resched(unsigned long cpu,
                                               bool slack_only)
 {
-        struct cpufreq_smartass2_policyinfo *ppol = per_cpu(polinfo, cpu);
-        struct cpufreq_smartass2_cpuinfo *pcpu;
-        struct cpufreq_smartass2_tunables *tunables =
+        struct cpufreq_interactive_policyinfo *ppol = per_cpu(polinfo, cpu);
+        struct cpufreq_interactive_cpuinfo *pcpu;
+        struct cpufreq_interactive_tunables *tunables =
                 ppol->policy->governor_data;
         u64 expires;
         unsigned long flags;
@@ -235,7 +235,7 @@ static void cpufreq_smartass2_timer_resched(unsigned long cpu,
 static void update_util_handler(struct update_util_data *data, u64 time,
                                 unsigned int sched_flags)
 {
-        struct cpufreq_smartass2_policyinfo *ppol;
+        struct cpufreq_interactive_policyinfo *ppol;
         unsigned long flags;
 
         ppol = *this_cpu_ptr(&polinfo);
@@ -278,11 +278,11 @@ static void gov_set_update_util(struct cpufreq_policy *policy)
 /* The caller shall take enable_sem write semaphore to avoid any timer race.
  * The policy_slack_timer must be deactivated when calling this function.
  */
-static void cpufreq_smartass2_timer_start(
-        struct cpufreq_smartass2_tunables *tunables, int cpu)
+static void cpufreq_interactive_timer_start(
+        struct cpufreq_interactive_tunables *tunables, int cpu)
 {
-        struct cpufreq_smartass2_policyinfo *ppol = per_cpu(polinfo, cpu);
-        struct cpufreq_smartass2_cpuinfo *pcpu;
+        struct cpufreq_interactive_policyinfo *ppol = per_cpu(polinfo, cpu);
+        struct cpufreq_interactive_cpuinfo *pcpu;
         u64 expires = round_to_nw_start(ppol->last_evaluated_jiffy, tunables);
         unsigned long flags;
         int i;
@@ -309,7 +309,7 @@ static void cpufreq_smartass2_timer_start(
 
 
 static unsigned int freq_to_above_hispeed_delay(
-        struct cpufreq_smartass2_tunables *tunables,
+        struct cpufreq_interactive_tunables *tunables,
         unsigned int freq)
 {
         int i;
@@ -328,7 +328,7 @@ static unsigned int freq_to_above_hispeed_delay(
 }
 
 static unsigned int freq_to_targetload(
-        struct cpufreq_smartass2_tunables *tunables, unsigned int freq)
+        struct cpufreq_interactive_tunables *tunables, unsigned int freq)
 {
         int i;
         unsigned int ret;
@@ -348,7 +348,7 @@ static unsigned int freq_to_targetload(
 #define DEFAULT_MAX_LOAD 100
 u32 get_freq_max_load(int cpu, unsigned int freq)
 {
-        struct cpufreq_smartass2_policyinfo *ppol = per_cpu(polinfo, cpu);
+        struct cpufreq_interactive_policyinfo *ppol = per_cpu(polinfo, cpu);
 
         if (!cpumask_test_cpu(cpu, &controlled_cpus))
                 return DEFAULT_MAX_LOAD;
@@ -369,7 +369,7 @@ u32 get_freq_max_load(int cpu, unsigned int freq)
  * choose_freq() will find the minimum frequency that does not exceed its
  * target load given the current load.
  */
-static unsigned int choose_freq(struct cpufreq_smartass2_policyinfo *pcpu,
+static unsigned int choose_freq(struct cpufreq_interactive_policyinfo *pcpu,
                 unsigned int loadadjfreq)
 {
         unsigned int freq = pcpu->policy->cur;
@@ -451,9 +451,9 @@ static unsigned int choose_freq(struct cpufreq_smartass2_policyinfo *pcpu,
 
 static u64 update_load(int cpu)
 {
-        struct cpufreq_smartass2_policyinfo *ppol = per_cpu(polinfo, cpu);
-        struct cpufreq_smartass2_cpuinfo *pcpu = &per_cpu(cpuinfo, cpu);
-        struct cpufreq_smartass2_tunables *tunables =
+        struct cpufreq_interactive_policyinfo *ppol = per_cpu(polinfo, cpu);
+        struct cpufreq_interactive_cpuinfo *pcpu = &per_cpu(cpuinfo, cpu);
+        struct cpufreq_interactive_tunables *tunables =
                 ppol->policy->governor_data;
         u64 now_idle, now, active_time, delta_idle, delta_time;
 
@@ -473,11 +473,11 @@ static u64 update_load(int cpu)
         return now;
 }
 
-static unsigned int sl_busy_to_laf(struct cpufreq_smartass2_policyinfo *ppol,
+static unsigned int sl_busy_to_laf(struct cpufreq_interactive_policyinfo *ppol,
                                    unsigned long busy)
 {
         int prev_load;
-        struct cpufreq_smartass2_tunables *tunables =
+        struct cpufreq_interactive_tunables *tunables =
                 ppol->policy->governor_data;
 
         prev_load = mult_frac(ppol->policy->cpuinfo.max_freq * 100,
@@ -487,18 +487,18 @@ static unsigned int sl_busy_to_laf(struct cpufreq_smartass2_policyinfo *ppol,
 
 #define NEW_TASK_RATIO 75
 #define PRED_TOLERANCE_PCT 10
-static void cpufreq_smartass2_timer(int data)
+static void cpufreq_interactive_timer(int data)
 {
         s64 now;
         unsigned int delta_time;
         u64 cputime_speedadj;
         int cpu_load;
         int pol_load = 0;
-        struct cpufreq_smartass2_policyinfo *ppol = per_cpu(polinfo, data);
-        struct cpufreq_smartass2_tunables *tunables =
+        struct cpufreq_interactive_policyinfo *ppol = per_cpu(polinfo, data);
+        struct cpufreq_interactive_tunables *tunables =
                 ppol->policy->governor_data;
         struct sched_load *sl = ppol->sl;
-        struct cpufreq_smartass2_cpuinfo *pcpu;
+        struct cpufreq_interactive_cpuinfo *pcpu;
         unsigned int new_freq;
         unsigned int prev_laf = 0, t_prevlaf;
         unsigned int pred_laf = 0, t_predlaf = 0;
@@ -571,7 +571,7 @@ static void cpufreq_smartass2_timer(int data)
 
                 cpu_load = max(prev_l, pred_l);
                 pol_load = max(pol_load, cpu_load);
-                trace_cpufreq_smartass2_cpuload(cpu, cpu_load, new_load_pct,
+                trace_cpufreq_interactive_cpuload(cpu, cpu_load, new_load_pct,
                                                   prev_l, pred_l);
 
                 /* save loadadjfreq for notification */
@@ -630,7 +630,7 @@ static void cpufreq_smartass2_timer(int data)
             new_freq > ppol->target_freq &&
             now - ppol->hispeed_validate_time <
             freq_to_above_hispeed_delay(tunables, ppol->target_freq)) {
-                trace_cpufreq_smartass2_notyet(
+                trace_cpufreq_interactive_notyet(
                         max_cpu, pol_load, ppol->target_freq,
                         ppol->policy->cur, new_freq);
                 spin_unlock_irqrestore(&ppol->target_freq_lock, flags);
@@ -650,7 +650,7 @@ static void cpufreq_smartass2_timer(int data)
         if (!skip_min_sample_time && new_freq < ppol->floor_freq) {
                 if (now - ppol->floor_validate_time <
                                 tunables->min_sample_time) {
-                        trace_cpufreq_smartass2_notyet(
+                        trace_cpufreq_interactive_notyet(
                                 max_cpu, pol_load, ppol->target_freq,
                                 ppol->policy->cur, new_freq);
                         spin_unlock_irqrestore(&ppol->target_freq_lock, flags);
@@ -680,14 +680,14 @@ static void cpufreq_smartass2_timer(int data)
 
         if (ppol->target_freq == new_freq &&
                         ppol->target_freq <= ppol->policy->cur) {
-                trace_cpufreq_smartass2_already(
+                trace_cpufreq_interactive_already(
                         max_cpu, pol_load, ppol->target_freq,
                         ppol->policy->cur, new_freq);
                 spin_unlock_irqrestore(&ppol->target_freq_lock, flags);
                 goto rearm;
         }
 
-        trace_cpufreq_smartass2_target(max_cpu, pol_load, ppol->target_freq,
+        trace_cpufreq_interactive_target(max_cpu, pol_load, ppol->target_freq,
                                          ppol->policy->cur, new_freq);
 
         ppol->target_freq = new_freq;
@@ -699,7 +699,7 @@ static void cpufreq_smartass2_timer(int data)
         wake_up_process(speedchange_task);
 
 rearm:
-        cpufreq_smartass2_timer_resched(data, false);
+        cpufreq_interactive_timer_resched(data, false);
 
         /*
          * Send govinfo notification.
@@ -722,12 +722,12 @@ exit:
         return;
 }
 
-static int cpufreq_smartass2_speedchange_task(void *data)
+static int cpufreq_interactive_speedchange_task(void *data)
 {
         unsigned int cpu;
         cpumask_t tmp_mask;
         unsigned long flags;
-        struct cpufreq_smartass2_policyinfo *ppol;
+        struct cpufreq_interactive_policyinfo *ppol;
 
         while (1) {
                 set_current_state(TASK_INTERRUPTIBLE);
@@ -762,7 +762,7 @@ static int cpufreq_smartass2_speedchange_task(void *data)
                                 __cpufreq_driver_target(ppol->policy,
                                                         ppol->target_freq,
                                                         CPUFREQ_RELATION_H);
-                        trace_cpufreq_smartass2_setspeed(cpu,
+                        trace_cpufreq_interactive_setspeed(cpu,
                                                      ppol->target_freq,
                                                      ppol->policy->cur);
                         up_read(&ppol->enable_sem);
@@ -772,12 +772,12 @@ static int cpufreq_smartass2_speedchange_task(void *data)
         return 0;
 }
 
-static void cpufreq_smartass2_boost(struct cpufreq_smartass2_tunables *tunables)
+static void cpufreq_interactive_boost(struct cpufreq_interactive_tunables *tunables)
 {
         int i;
         int anyboost = 0;
         unsigned long flags[2];
-        struct cpufreq_smartass2_policyinfo *ppol;
+        struct cpufreq_interactive_policyinfo *ppol;
 
         tunables->boosted = true;
 
@@ -818,8 +818,8 @@ static int load_change_callback(struct notifier_block *nb, unsigned long val,
                                 void *data)
 {
         unsigned long cpu = (unsigned long) data;
-        struct cpufreq_smartass2_policyinfo *ppol = per_cpu(polinfo, cpu);
-        struct cpufreq_smartass2_tunables *tunables;
+        struct cpufreq_interactive_policyinfo *ppol = per_cpu(polinfo, cpu);
+        struct cpufreq_interactive_tunables *tunables;
         unsigned long flags;
 
         if (!ppol || ppol->reject_notification)
@@ -847,10 +847,10 @@ exit:
         return 0;
 }
 
-static enum hrtimer_restart cpufreq_smartass2_hrtimer(struct hrtimer *timer)
+static enum hrtimer_restart cpufreq_interactive_hrtimer(struct hrtimer *timer)
 {
-        struct cpufreq_smartass2_policyinfo *ppol = container_of(timer,
-                        struct cpufreq_smartass2_policyinfo, notif_timer);
+        struct cpufreq_interactive_policyinfo *ppol = container_of(timer,
+                        struct cpufreq_interactive_policyinfo, notif_timer);
         int cpu;
 
         if (!down_read_trylock(&ppol->enable_sem))
@@ -860,9 +860,9 @@ static enum hrtimer_restart cpufreq_smartass2_hrtimer(struct hrtimer *timer)
                 return 0;
         }
         cpu = ppol->notif_cpu;
-        trace_cpufreq_smartass2_load_change(cpu);
+        trace_cpufreq_interactive_load_change(cpu);
         del_timer(&ppol->policy_slack_timer);
-        cpufreq_smartass2_timer(cpu);
+        cpufreq_interactive_timer(cpu);
 
         up_read(&ppol->enable_sem);
         return HRTIMER_NORESTART;
@@ -872,11 +872,11 @@ static struct notifier_block load_notifier_block = {
         .notifier_call = load_change_callback,
 };
 
-static int cpufreq_smartass2_notifier(
+static int cpufreq_interactive_notifier(
         struct notifier_block *nb, unsigned long val, void *data)
 {
         struct cpufreq_freqs *freq = data;
-        struct cpufreq_smartass2_policyinfo *ppol;
+        struct cpufreq_interactive_policyinfo *ppol;
         int cpu;
         unsigned long flags;
 
@@ -906,7 +906,7 @@ static int cpufreq_smartass2_notifier(
 }
 
 static struct notifier_block cpufreq_notifier_block = {
-        .notifier_call = cpufreq_smartass2_notifier,
+        .notifier_call = cpufreq_interactive_notifier,
 };
 
 static unsigned int *get_tokenized_data(const char *buf, int *num_tokens)
@@ -955,7 +955,7 @@ err:
 }
 
 static ssize_t show_target_loads(
-        struct cpufreq_smartass2_tunables *tunables,
+        struct cpufreq_interactive_tunables *tunables,
         char *buf)
 {
         int i;
@@ -974,7 +974,7 @@ static ssize_t show_target_loads(
 }
 
 static ssize_t store_target_loads(
-        struct cpufreq_smartass2_tunables *tunables,
+        struct cpufreq_interactive_tunables *tunables,
         const char *buf, size_t count)
 {
         int ntokens;
@@ -998,7 +998,7 @@ static ssize_t store_target_loads(
 }
 
 static ssize_t show_above_hispeed_delay(
-        struct cpufreq_smartass2_tunables *tunables, char *buf)
+        struct cpufreq_interactive_tunables *tunables, char *buf)
 {
         int i;
         ssize_t ret = 0;
@@ -1017,7 +1017,7 @@ static ssize_t show_above_hispeed_delay(
 }
 
 static ssize_t store_above_hispeed_delay(
-        struct cpufreq_smartass2_tunables *tunables,
+        struct cpufreq_interactive_tunables *tunables,
         const char *buf, size_t count)
 {
         int ntokens;
@@ -1038,13 +1038,13 @@ static ssize_t store_above_hispeed_delay(
 
 }
 
-static ssize_t show_hispeed_freq(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t show_hispeed_freq(struct cpufreq_interactive_tunables *tunables,
                 char *buf)
 {
         return sprintf(buf, "%u\n", tunables->hispeed_freq);
 }
 
-static ssize_t store_hispeed_freq(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t store_hispeed_freq(struct cpufreq_interactive_tunables *tunables,
                 const char *buf, size_t count)
 {
         int ret;
@@ -1059,12 +1059,12 @@ static ssize_t store_hispeed_freq(struct cpufreq_smartass2_tunables *tunables,
 
 #define show_store_one(file_name)                                       \
 static ssize_t show_##file_name(                                        \
-        struct cpufreq_smartass2_tunables *tunables, char *buf)       \
+        struct cpufreq_interactive_tunables *tunables, char *buf)       \
 {                                                                       \
         return snprintf(buf, PAGE_SIZE, "%u\n", tunables->file_name);   \
 }                                                                       \
 static ssize_t store_##file_name(                                       \
-                struct cpufreq_smartass2_tunables *tunables,          \
+                struct cpufreq_interactive_tunables *tunables,          \
                 const char *buf, size_t count)                          \
 {                                                                       \
         int ret;                                                        \
@@ -1082,13 +1082,13 @@ show_store_one(ignore_hispeed_on_notif);
 show_store_one(fast_ramp_down);
 show_store_one(enable_prediction);
 
-static ssize_t show_go_hispeed_load(struct cpufreq_smartass2_tunables
+static ssize_t show_go_hispeed_load(struct cpufreq_interactive_tunables
                 *tunables, char *buf)
 {
         return sprintf(buf, "%lu\n", tunables->go_hispeed_load);
 }
 
-static ssize_t store_go_hispeed_load(struct cpufreq_smartass2_tunables
+static ssize_t store_go_hispeed_load(struct cpufreq_interactive_tunables
                 *tunables, const char *buf, size_t count)
 {
         int ret;
@@ -1101,13 +1101,13 @@ static ssize_t store_go_hispeed_load(struct cpufreq_smartass2_tunables
         return count;
 }
 
-static ssize_t show_min_sample_time(struct cpufreq_smartass2_tunables
+static ssize_t show_min_sample_time(struct cpufreq_interactive_tunables
                 *tunables, char *buf)
 {
         return sprintf(buf, "%lu\n", tunables->min_sample_time);
 }
 
-static ssize_t store_min_sample_time(struct cpufreq_smartass2_tunables
+static ssize_t store_min_sample_time(struct cpufreq_interactive_tunables
                 *tunables, const char *buf, size_t count)
 {
         int ret;
@@ -1120,18 +1120,18 @@ static ssize_t store_min_sample_time(struct cpufreq_smartass2_tunables
         return count;
 }
 
-static ssize_t show_timer_rate(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t show_timer_rate(struct cpufreq_interactive_tunables *tunables,
                 char *buf)
 {
         return sprintf(buf, "%lu\n", tunables->timer_rate);
 }
 
-static ssize_t store_timer_rate(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t store_timer_rate(struct cpufreq_interactive_tunables *tunables,
                 const char *buf, size_t count)
 {
         int ret;
         unsigned long val, val_round;
-        struct cpufreq_smartass2_tunables *t;
+        struct cpufreq_interactive_tunables *t;
         int cpu;
 
         ret = kstrtoul(buf, 0, &val);
@@ -1159,13 +1159,13 @@ static ssize_t store_timer_rate(struct cpufreq_smartass2_tunables *tunables,
         return count;
 }
 
-static ssize_t show_timer_slack(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t show_timer_slack(struct cpufreq_interactive_tunables *tunables,
                 char *buf)
 {
         return sprintf(buf, "%d\n", tunables->timer_slack_val);
 }
 
-static ssize_t store_timer_slack(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t store_timer_slack(struct cpufreq_interactive_tunables *tunables,
                 const char *buf, size_t count)
 {
         int ret;
@@ -1179,13 +1179,13 @@ static ssize_t store_timer_slack(struct cpufreq_smartass2_tunables *tunables,
         return count;
 }
 
-static ssize_t show_boost(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t show_boost(struct cpufreq_interactive_tunables *tunables,
                           char *buf)
 {
         return sprintf(buf, "%d\n", tunables->boost_val);
 }
 
-static ssize_t store_boost(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t store_boost(struct cpufreq_interactive_tunables *tunables,
                            const char *buf, size_t count)
 {
         int ret;
@@ -1198,18 +1198,18 @@ static ssize_t store_boost(struct cpufreq_smartass2_tunables *tunables,
         tunables->boost_val = val;
 
         if (tunables->boost_val) {
-                trace_cpufreq_smartass2_boost("on");
+                trace_cpufreq_interactive_boost("on");
                 if (!tunables->boosted)
-                        cpufreq_smartass2_boost(tunables);
+                        cpufreq_interactive_boost(tunables);
         } else {
                 tunables->boostpulse_endtime = ktime_to_us(ktime_get());
-                trace_cpufreq_smartass2_unboost("off");
+                trace_cpufreq_interactive_unboost("off");
         }
 
         return count;
 }
 
-static ssize_t store_boostpulse(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t store_boostpulse(struct cpufreq_interactive_tunables *tunables,
                                 const char *buf, size_t count)
 {
         int ret;
@@ -1221,19 +1221,19 @@ static ssize_t store_boostpulse(struct cpufreq_smartass2_tunables *tunables,
 
         tunables->boostpulse_endtime = ktime_to_us(ktime_get()) +
                 tunables->boostpulse_duration_val;
-        trace_cpufreq_smartass2_boost("pulse");
+        trace_cpufreq_interactive_boost("pulse");
         if (!tunables->boosted)
-                cpufreq_smartass2_boost(tunables);
+                cpufreq_interactive_boost(tunables);
         return count;
 }
 
-static ssize_t show_boostpulse_duration(struct cpufreq_smartass2_tunables
+static ssize_t show_boostpulse_duration(struct cpufreq_interactive_tunables
                 *tunables, char *buf)
 {
         return sprintf(buf, "%d\n", tunables->boostpulse_duration_val);
 }
 
-static ssize_t store_boostpulse_duration(struct cpufreq_smartass2_tunables
+static ssize_t store_boostpulse_duration(struct cpufreq_interactive_tunables
                 *tunables, const char *buf, size_t count)
 {
         int ret;
@@ -1247,18 +1247,18 @@ static ssize_t store_boostpulse_duration(struct cpufreq_smartass2_tunables
         return count;
 }
 
-static ssize_t show_io_is_busy(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t show_io_is_busy(struct cpufreq_interactive_tunables *tunables,
                 char *buf)
 {
         return sprintf(buf, "%u\n", tunables->io_is_busy);
 }
 
-static ssize_t store_io_is_busy(struct cpufreq_smartass2_tunables *tunables,
+static ssize_t store_io_is_busy(struct cpufreq_interactive_tunables *tunables,
                 const char *buf, size_t count)
 {
         int ret;
         unsigned long val;
-        struct cpufreq_smartass2_tunables *t;
+        struct cpufreq_interactive_tunables *t;
         int cpu;
 
         ret = kstrtoul(buf, 0, &val);
@@ -1281,11 +1281,11 @@ static ssize_t store_io_is_busy(struct cpufreq_smartass2_tunables *tunables,
         return count;
 }
 
-static int cpufreq_smartass2_enable_sched_input(
-                        struct cpufreq_smartass2_tunables *tunables)
+static int cpufreq_interactive_enable_sched_input(
+                        struct cpufreq_interactive_tunables *tunables)
 {
         int rc = 0, j;
-        struct cpufreq_smartass2_tunables *t;
+        struct cpufreq_interactive_tunables *t;
 
         mutex_lock(&sched_lock);
 
@@ -1325,8 +1325,8 @@ out:
         return rc;
 }
 
-static int cpufreq_smartass2_disable_sched_input(
-                        struct cpufreq_smartass2_tunables *tunables)
+static int cpufreq_interactive_disable_sched_input(
+                        struct cpufreq_interactive_tunables *tunables)
 {
         mutex_lock(&sched_lock);
 
@@ -1344,13 +1344,13 @@ static int cpufreq_smartass2_disable_sched_input(
 }
 
 static ssize_t show_use_sched_load(
-                struct cpufreq_smartass2_tunables *tunables, char *buf)
+                struct cpufreq_interactive_tunables *tunables, char *buf)
 {
         return snprintf(buf, PAGE_SIZE, "%d\n", tunables->use_sched_load);
 }
 
 static ssize_t store_use_sched_load(
-                        struct cpufreq_smartass2_tunables *tunables,
+                        struct cpufreq_interactive_tunables *tunables,
                         const char *buf, size_t count)
 {
         int ret;
@@ -1366,9 +1366,9 @@ static ssize_t store_use_sched_load(
         tunables->use_sched_load = val;
 
         if (val)
-                ret = cpufreq_smartass2_enable_sched_input(tunables);
+                ret = cpufreq_interactive_enable_sched_input(tunables);
         else
-                ret = cpufreq_smartass2_disable_sched_input(tunables);
+                ret = cpufreq_interactive_disable_sched_input(tunables);
 
         if (ret) {
                 tunables->use_sched_load = !val;
@@ -1379,14 +1379,14 @@ static ssize_t store_use_sched_load(
 }
 
 static ssize_t show_use_migration_notif(
-                struct cpufreq_smartass2_tunables *tunables, char *buf)
+                struct cpufreq_interactive_tunables *tunables, char *buf)
 {
         return snprintf(buf, PAGE_SIZE, "%d\n",
                         tunables->use_migration_notif);
 }
 
 static ssize_t store_use_migration_notif(
-                        struct cpufreq_smartass2_tunables *tunables,
+                        struct cpufreq_interactive_tunables *tunables,
                         const char *buf, size_t count)
 {
         int ret;
@@ -1514,7 +1514,7 @@ static struct freq_attr boostpulse_gov_pol =
         __ATTR(boostpulse, 0200, NULL, store_boostpulse_gov_pol);
 
 /* One Governor instance for entire system */
-static struct attribute *smartass2_attributes_gov_sys[] = {
+static struct attribute *interactive_attributes_gov_sys[] = {
         &target_loads_gov_sys.attr,
         &above_hispeed_delay_gov_sys.attr,
         &hispeed_freq_gov_sys.attr,
@@ -1536,13 +1536,13 @@ static struct attribute *smartass2_attributes_gov_sys[] = {
         NULL,
 };
 
-static struct attribute_group smartass2_attr_group_gov_sys = {
-        .attrs = smartass2_attributes_gov_sys,
-        .name = "smartass2",
+static struct attribute_group interactive_attr_group_gov_sys = {
+        .attrs = interactive_attributes_gov_sys,
+        .name = "interactive",
 };
 
 /* Per policy governor instance */
-static struct attribute *smartass2_attributes_gov_pol[] = {
+static struct attribute *interactive_attributes_gov_pol[] = {
         &target_loads_gov_pol.attr,
         &above_hispeed_delay_gov_pol.attr,
         &hispeed_freq_gov_pol.attr,
@@ -1564,27 +1564,27 @@ static struct attribute *smartass2_attributes_gov_pol[] = {
         NULL,
 };
 
-static struct attribute_group smartass2_attr_group_gov_pol = {
-        .attrs = smartass2_attributes_gov_pol,
-        .name = "smartass2",
+static struct attribute_group interactive_attr_group_gov_pol = {
+        .attrs = interactive_attributes_gov_pol,
+        .name = "interactive",
 };
 
 static struct attribute_group *get_sysfs_attr(void)
 {
         if (have_governor_per_policy())
-                return &smartass2_attr_group_gov_pol;
+                return &interactive_attr_group_gov_pol;
         else
-                return &smartass2_attr_group_gov_sys;
+                return &interactive_attr_group_gov_sys;
 }
 
-static void cpufreq_smartass2_nop_timer(unsigned long data)
+static void cpufreq_interactive_nop_timer(unsigned long data)
 {
 }
 
-static struct cpufreq_smartass2_tunables *alloc_tunable(
+static struct cpufreq_interactive_tunables *alloc_tunable(
                                         struct cpufreq_policy *policy)
 {
-        struct cpufreq_smartass2_tunables *tunables;
+        struct cpufreq_interactive_tunables *tunables;
 
         tunables = kzalloc(sizeof(*tunables), GFP_KERNEL);
         if (!tunables)
@@ -1609,22 +1609,22 @@ static struct cpufreq_smartass2_tunables *alloc_tunable(
 
 static void irq_work(struct irq_work *irq_work)
 {
-        struct cpufreq_smartass2_policyinfo *ppol;
+        struct cpufreq_interactive_policyinfo *ppol;
         unsigned long flags;
 
-        ppol = container_of(irq_work, struct cpufreq_smartass2_policyinfo,
+        ppol = container_of(irq_work, struct cpufreq_interactive_policyinfo,
                             irq_work);
 
-        cpufreq_smartass2_timer(smp_processor_id());
+        cpufreq_interactive_timer(smp_processor_id());
         spin_lock_irqsave(&ppol->irq_work_lock, flags);
         ppol->work_in_progress = false;
         spin_unlock_irqrestore(&ppol->irq_work_lock, flags);
 }
 
-static struct cpufreq_smartass2_policyinfo *get_policyinfo(
+static struct cpufreq_interactive_policyinfo *get_policyinfo(
                                         struct cpufreq_policy *policy)
 {
-        struct cpufreq_smartass2_policyinfo *ppol =
+        struct cpufreq_interactive_policyinfo *ppol =
                                 per_cpu(polinfo, policy->cpu);
         int i;
         struct sched_load *sl;
@@ -1646,9 +1646,9 @@ static struct cpufreq_smartass2_policyinfo *get_policyinfo(
         ppol->sl = sl;
 
         init_timer(&ppol->policy_slack_timer);
-        ppol->policy_slack_timer.function = cpufreq_smartass2_nop_timer;
+        ppol->policy_slack_timer.function = cpufreq_interactive_nop_timer;
         hrtimer_init(&ppol->notif_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-        ppol->notif_timer.function = cpufreq_smartass2_hrtimer;
+        ppol->notif_timer.function = cpufreq_interactive_hrtimer;
         init_irq_work(&ppol->irq_work, irq_work);
         spin_lock_init(&ppol->irq_work_lock);
         spin_lock_init(&ppol->load_lock);
@@ -1663,7 +1663,7 @@ static struct cpufreq_smartass2_policyinfo *get_policyinfo(
 /* This function is not multithread-safe. */
 static void free_policyinfo(int cpu)
 {
-        struct cpufreq_smartass2_policyinfo *ppol = per_cpu(polinfo, cpu);
+        struct cpufreq_interactive_policyinfo *ppol = per_cpu(polinfo, cpu);
         int j;
 
         if (!ppol)
@@ -1677,8 +1677,8 @@ static void free_policyinfo(int cpu)
         kfree(ppol);
 }
 
-static struct cpufreq_smartass2_tunables *get_tunables(
-                                struct cpufreq_smartass2_policyinfo *ppol)
+static struct cpufreq_interactive_tunables *get_tunables(
+                                struct cpufreq_interactive_policyinfo *ppol)
 {
         if (have_governor_per_policy())
                 return ppol->cached_tunables;
@@ -1686,21 +1686,21 @@ static struct cpufreq_smartass2_tunables *get_tunables(
                 return cached_common_tunables;
 }
 
-/* smartass2 Governor callbacks */
-struct smartass2_governor {
+/* Interactive Governor callbacks */
+struct interactive_governor {
         struct cpufreq_governor gov;
         unsigned int usage_count;
 };
 
-static struct smartass2_governor smartass2_gov;
+static struct interactive_governor interactive_gov;
 
-#define CPU_FREQ_GOV_smartass2        (&smartass2_gov.gov)
+#define CPU_FREQ_GOV_INTERACTIVE        (&interactive_gov.gov)
 
-int cpufreq_smartass2_init(struct cpufreq_policy *policy)
+int cpufreq_interactive_init(struct cpufreq_policy *policy)
 {
         int rc;
-        struct cpufreq_smartass2_policyinfo *ppol;
-        struct cpufreq_smartass2_tunables *tunables;
+        struct cpufreq_interactive_policyinfo *ppol;
+        struct cpufreq_interactive_tunables *tunables;
 
         if (have_governor_per_policy())
                 tunables = policy->governor_data;
@@ -1744,12 +1744,12 @@ int cpufreq_smartass2_init(struct cpufreq_policy *policy)
                 return rc;
         }
 
-        if (!smartass2_gov.usage_count++)
+        if (!interactive_gov.usage_count++)
                 cpufreq_register_notifier(&cpufreq_notifier_block,
                                 CPUFREQ_TRANSITION_NOTIFIER);
 
         if (tunables->use_sched_load)
-                cpufreq_smartass2_enable_sched_input(tunables);
+                cpufreq_interactive_enable_sched_input(tunables);
 
         cpumask_or(&controlled_cpus, &controlled_cpus,
                    policy->related_cpus);
@@ -1763,9 +1763,9 @@ int cpufreq_smartass2_init(struct cpufreq_policy *policy)
         return 0;
 }
 
-void cpufreq_smartass2_exit(struct cpufreq_policy *policy)
+void cpufreq_interactive_exit(struct cpufreq_policy *policy)
 {
-        struct cpufreq_smartass2_tunables *tunables;
+        struct cpufreq_interactive_tunables *tunables;
 
         if (have_governor_per_policy())
                 tunables = policy->governor_data;
@@ -1779,7 +1779,7 @@ void cpufreq_smartass2_exit(struct cpufreq_policy *policy)
         sched_update_freq_max_load(cpu_possible_mask);
         if (!--tunables->usage_count) {
                 /* Last policy using the governor ? */
-                if (!--smartass2_gov.usage_count)
+                if (!--interactive_gov.usage_count)
                         cpufreq_unregister_notifier(&cpufreq_notifier_block,
                                         CPUFREQ_TRANSITION_NOTIFIER);
 
@@ -1792,14 +1792,14 @@ void cpufreq_smartass2_exit(struct cpufreq_policy *policy)
         policy->governor_data = NULL;
 
         if (tunables->use_sched_load)
-                cpufreq_smartass2_disable_sched_input(tunables);
+                cpufreq_interactive_disable_sched_input(tunables);
 }
 
-int cpufreq_smartass2_start(struct cpufreq_policy *policy)
+int cpufreq_interactive_start(struct cpufreq_policy *policy)
 {
-        struct cpufreq_smartass2_policyinfo *ppol;
+        struct cpufreq_interactive_policyinfo *ppol;
         struct cpufreq_frequency_table *freq_table;
-        struct cpufreq_smartass2_tunables *tunables;
+        struct cpufreq_interactive_tunables *tunables;
 
         if (have_governor_per_policy())
                 tunables = policy->governor_data;
@@ -1829,7 +1829,7 @@ int cpufreq_smartass2_start(struct cpufreq_policy *policy)
         down_write(&ppol->enable_sem);
         del_timer_sync(&ppol->policy_slack_timer);
         ppol->last_evaluated_jiffy = get_jiffies_64();
-        cpufreq_smartass2_timer_start(tunables, policy->cpu);
+        cpufreq_interactive_timer_start(tunables, policy->cpu);
         ppol->governor_enabled = 1;
         up_write(&ppol->enable_sem);
         ppol->reject_notification = false;
@@ -1838,10 +1838,10 @@ int cpufreq_smartass2_start(struct cpufreq_policy *policy)
         return 0;
 }
 
-void cpufreq_smartass2_stop(struct cpufreq_policy *policy)
+void cpufreq_interactive_stop(struct cpufreq_policy *policy)
 {
-        struct cpufreq_smartass2_policyinfo *ppol;
-        struct cpufreq_smartass2_tunables *tunables;
+        struct cpufreq_interactive_policyinfo *ppol;
+        struct cpufreq_interactive_tunables *tunables;
 
         if (have_governor_per_policy())
                 tunables = policy->governor_data;
@@ -1867,10 +1867,10 @@ void cpufreq_smartass2_stop(struct cpufreq_policy *policy)
         mutex_unlock(&gov_lock);
 }
 
-void cpufreq_smartass2_limits(struct cpufreq_policy *policy)
+void cpufreq_interactive_limits(struct cpufreq_policy *policy)
 {
-        struct cpufreq_smartass2_policyinfo *ppol;
-        struct cpufreq_smartass2_tunables *tunables;
+        struct cpufreq_interactive_policyinfo *ppol;
+        struct cpufreq_interactive_tunables *tunables;
 
         if (have_governor_per_policy())
                 tunables = policy->governor_data;
@@ -1886,27 +1886,27 @@ void cpufreq_smartass2_limits(struct cpufreq_policy *policy)
         down_read(&ppol->enable_sem);
         if (ppol->governor_enabled) {
                 if (policy->min < ppol->min_freq)
-                        cpufreq_smartass2_timer_resched(policy->cpu,
+                        cpufreq_interactive_timer_resched(policy->cpu,
                                                           true);
                 ppol->min_freq = policy->min;
         }
         up_read(&ppol->enable_sem);
 }
 
-static struct smartass2_governor smartass2_gov = {
+static struct interactive_governor interactive_gov = {
         .gov = {
-                .name                   = "smartass2",
+                .name                   = "interactive",
                 .max_transition_latency = 10000000,
                 .owner                  = THIS_MODULE,
-                .init                   = cpufreq_smartass2_init,
-                .exit                   = cpufreq_smartass2_exit,
-                .start                  = cpufreq_smartass2_start,
-                .stop                   = cpufreq_smartass2_stop,
-                .limits                 = cpufreq_smartass2_limits,
+                .init                   = cpufreq_interactive_init,
+                .exit                   = cpufreq_interactive_exit,
+                .start                  = cpufreq_interactive_start,
+                .stop                   = cpufreq_interactive_stop,
+                .limits                 = cpufreq_interactive_limits,
         }
 };
 
-static int __init cpufreq_smartass2_gov_init(void)
+static int __init cpufreq_interactive_gov_init(void)
 {
         struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
 
@@ -1914,8 +1914,8 @@ static int __init cpufreq_smartass2_gov_init(void)
         mutex_init(&gov_lock);
         mutex_init(&sched_lock);
         speedchange_task =
-                kthread_create(cpufreq_smartass2_speedchange_task, NULL,
-                               "cfsmartass2");
+                kthread_create(cpufreq_interactive_speedchange_task, NULL,
+                               "cfinteractive");
         if (IS_ERR(speedchange_task))
                 return PTR_ERR(speedchange_task);
 
@@ -1925,25 +1925,25 @@ static int __init cpufreq_smartass2_gov_init(void)
         /* NB: wake up so the thread does not look hung to the freezer */
         wake_up_process(speedchange_task);
 
-        return cpufreq_register_governor(CPU_FREQ_GOV_smartass2);
+        return cpufreq_register_governor(CPU_FREQ_GOV_INTERACTIVE);
 }
 
-#ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_smartass2
+#ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_INTERACTIVE
 struct cpufreq_governor *cpufreq_default_governor(void)
 {
-        return CPU_FREQ_GOV_smartass2;
+        return CPU_FREQ_GOV_INTERACTIVE;
 }
 
-fs_initcall(cpufreq_smartass2_gov_init);
+fs_initcall(cpufreq_interactive_gov_init);
 #else
-module_init(cpufreq_smartass2_gov_init);
+module_init(cpufreq_interactive_gov_init);
 #endif
 
-static void __exit cpufreq_smartass2_gov_exit(void)
+static void __exit cpufreq_interactive_gov_exit(void)
 {
         int cpu;
 
-        cpufreq_unregister_governor(CPU_FREQ_GOV_smartass2);
+        cpufreq_unregister_governor(CPU_FREQ_GOV_INTERACTIVE);
         kthread_stop(speedchange_task);
         put_task_struct(speedchange_task);
 
@@ -1951,9 +1951,9 @@ static void __exit cpufreq_smartass2_gov_exit(void)
                 free_policyinfo(cpu);
 }
 
-module_exit(cpufreq_smartass2_gov_exit);
+module_exit(cpufreq_interactive_gov_exit);
 
 MODULE_AUTHOR("Mike Chan <mike@android.com>");
-MODULE_DESCRIPTION("'cpufreq_smartass2' - A cpufreq governor for "
+MODULE_DESCRIPTION("'cpufreq_interactive' - A cpufreq governor for "
         "Latency sensitive workloads");
 MODULE_LICENSE("GPL");

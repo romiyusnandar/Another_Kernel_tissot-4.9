@@ -107,9 +107,9 @@ packingkernel() {
         mkdir "${ANYKERNEL}"/kernel/
         cp "${KERN_IMG}" "${ANYKERNEL}"/kernel/Image.gz
         mkdir "${ANYKERNEL}"/dtb-nontreble/
-        cp "${KERN_DTB_TB}" "${ANYKERNEL}"/dtb-nontreble/msm8953-qrd-sku3-tissot-treble.dtb
+        cp "${KERN_DTB_NONTB}" "${ANYKERNEL}"/dtb-nontreble/msm8953-qrd-sku3-tissot-nontreble.dtb
     mkdir "${ANYKERNEL}"/dtb-treble/
-        cp "${KERN_DTB_TB}" "${ANYKERNEL}"/dtb-treble/msm8953-qrd-sku3-tissot-treble.dtb
+        cp "${KERN_DTB_NONTB}" "${ANYKERNEL}"/dtb-treble/msm8953-qrd-sku3-tissot-nontreble.dtb
 
     # Zip the kernel, or fail
     cd "${ANYKERNEL}" || exit

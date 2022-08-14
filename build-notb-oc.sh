@@ -138,8 +138,8 @@ END=$(TZ=Asia/Jakarta date +"%s")
 DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
 
-tg_cast  "<b>Changelog :</b>" \
-    "-Disable 'ftrace' to reduce battery drain" \
-    "-Set USB fast charge by default" \
-    "-Move compiler to xRageTC-clang 15.0" \
-    "-Very many misc. improvement"
+#tg_cast  "<b>Changelog :</b>" \
+ #   "-Disable 'ftrace' to reduce battery drain" \
+  #  "-Set USB fast charge by default" \
+   # "-Move compiler to xRageTC-clang 15.0" \
+   # "-Very many misc. improvement"

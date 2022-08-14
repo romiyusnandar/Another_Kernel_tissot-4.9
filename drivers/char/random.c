@@ -1514,4 +1514,6 @@ struct ctl_table random_table[] = {
 	},
 	{ }
 };
+
 #endif	/* CONFIG_SYSCTL */
+

@@ -3788,7 +3788,6 @@ static irqreturn_t dwc3_process_event_buf(struct dwc3 *dwc)
 		dwc3_writel(dwc->regs, DWC3_GEVNTCOUNT(0),
 				DWC3_GEVNTCOUNT_EHB);
 
-
 	return ret;
 }
 

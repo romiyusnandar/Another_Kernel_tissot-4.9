@@ -28,7 +28,6 @@
 #include <linux/slab.h>
 #include <linux/highmem.h>
 #include <linux/random.h>
-
 #include <trace/events/power.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpuhp.h>

@@ -1553,6 +1553,7 @@ static int fill_random_ptr_key(struct notifier_block *nb,
 {
 	/* This may be in an interrupt handler. */
 	queue_work(system_unbound_wq, &enable_ptr_key_work);
+	return 0;
 }
 
 static struct notifier_block random_ready = {

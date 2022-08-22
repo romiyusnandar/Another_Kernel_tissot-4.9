@@ -41,8 +41,8 @@ TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
 
 # Telegram
-CHATIDQ="-1001327944468"
-CHATID="-1001327944468" # Group/channel chatid (use rose/userbot to get it)
+CHATIDQ="-1001597724605"
+CHATID="-1001597724605" # Group/channel chatid (use rose/userbot to get it)
 TELEGRAM_TOKEN="5136791856:AAGY5TeaVoeJbd6a2BAlxAjOc-MFWOJzZds" # Get from botfather
 
 # Export Telegram.sh
@@ -140,7 +140,7 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Add wireguard suported" \
-    "-Add fsync control enabled by default (disable it to get better performance but have own risk" \
+    "-Add wireguard support" \
+    "-Add fsync control and enabled by default (disable it to get better performance but have own risk" \
    # "-Move compiler to xRageTC-clang 15.0" \
    # "-Very many misc. improvement"

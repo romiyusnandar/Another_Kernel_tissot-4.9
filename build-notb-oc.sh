@@ -27,15 +27,15 @@ CLANG_DIR="${HOME}"/Build/kernel/xRageTC-clang
 
 # Defconfig
 DEFCONFIG="tissot_defconfig"
-#REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
+REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Cakeby"
-RELEASE_VERSION="3.0.5"
+RELEASE_VERSION="3.0.6"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
-KERNEL_SUPPORT="Android 9 - 12.1"
-KERNELNAME="${KERNEL}-${DEVICE}-${RELEASE_VERSION}"
+KERNEL_SUPPORT="9 - 13"
+KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}"
 # KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
@@ -63,11 +63,12 @@ tg_cast() {
 }
 
 # Regenerating Defconfig
-#regenerate() {
-  #  cp out/.config arch/arm64/configs/"${DEFCONFIG}"
-  #  git add arch/arm64/configs/"${DEFCONFIG}"
-   # git commit -m "defconfig: Regenerate"
-#}
+regenerate() {
+    cp out/.config arch/arm64/configs/"${DEFCONFIG}"
+    git add arch/arm64/configs/"${DEFCONFIG}"
+    git commit -m "defconfig: Regenerate"
+    git push
+}
 
 # Building
 makekernel() {
@@ -80,9 +81,9 @@ makekernel() {
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation
     mkdir -p out
     make O=out ARCH=arm64 ${DEFCONFIG}
-  #  if [[ "${REGENERATE_DEFCONFIG}" =~ "true" ]]; then
-   #     regenerate
-  #  fi
+    if [[ "${REGENERATE_DEFCONFIG}" =~ "true" ]]; then
+        regenerate
+    fi
     make -j$(nproc --all) CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- O=out ARCH=arm64
 
 # Check If compilation is success
@@ -129,7 +130,7 @@ tg_cast "<b>STARTING KERNEL BUILD</b>" \
     "Device: <code>${DEVICE}</code>" \
     "Kernel Name: <code>${KERNEL}</code>" \
     "Build Type: <code>${KERNELTYPE}</code>" \
-    "Release Version: ${RELEASE_VERSION}" \
+    "Release Version: <code>${RELEASE_VERSION}</code>" \
     "Linux Version: <code>$(make kernelversion)</code>" \
     "Android Supported: <code>${KERNEL_SUPPORT}</code>"
 START=$(TZ=Asia/Jakarta date +"%s")
@@ -140,7 +141,7 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Add wireguard support" \
-    "-Add fsync control and enabled by default (disable it to get better performance but have own risk" \
-   # "-Move compiler to xRageTC-clang 15.0" \
-   # "-Very many misc. improvement"
+    "-Fixed video issue: like can't share video in whatsapp, instagram reels and other" \
+    "-Remove wireguard: fix wifi/data lost issue in some user" \
+    "-Add android 13 supported" \
+    "-Add LMK (low memory killer)"

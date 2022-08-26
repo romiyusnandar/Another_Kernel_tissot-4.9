@@ -31,11 +31,11 @@ REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Cakeby"
-RELEASE_VERSION="3.0.6"
+RELEASE_VERSION="v3.1"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="9 - 13"
-KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}"
+KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-${RELEASE_VERSION}"
 # KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
@@ -141,7 +141,6 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Fixed video issue: like can't share video in whatsapp, instagram reels and other" \
-    "-Remove wireguard: fix wifi/data lost issue in some user" \
-    "-Add android 13 supported" \
-    "-Add LMK (low memory killer)"
+    "-Upstream to latest linux version 4.9.326" \
+    "-Remove LMK" \
+    "-Add PRLMK (custom LMK)" \

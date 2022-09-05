@@ -54,7 +54,7 @@ else
 fi
 
 LINUX_COMPILE_BY="kakashi"
-LINUX_COMPILE_HOST="build-server"
+LINUX_COMPILE_HOST="local-server"
 
 UTS_VERSION="#$VERSION"
 CONFIG_FLAGS=""

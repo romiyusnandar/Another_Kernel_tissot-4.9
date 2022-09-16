@@ -31,7 +31,7 @@ REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Cakeby"
-RELEASE_VERSION="v3.1"
+RELEASE_VERSION="v3.2"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="9 - 13"
@@ -120,6 +120,9 @@ packingkernel() {
     # Sign the zip before sending it to Telegram
    # curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel2/master/zipsigner-3.0.jar
    # java -jar zipsigner-3.0.jar "${TEMPZIPNAME}" "${ZIPNAME}"
+    echo "........................"
+    echo ".    Uploading File    ."
+    echo "........................"
 
     # Ship it to the CI channel
     "${TELEGRAM}" -f "$ZIPNAME" -t "${TELEGRAM_TOKEN}" -c "${CHATIDQ}" 
@@ -141,6 +144,5 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstream to latest linux version 4.9.326" \
-    "-Remove LMK" \
-    "-Add PRLMK (custom LMK)" \
+    "-Upstreamed to 4.9.327" \
+    "-Merged tag to 'LA.UM.10.6.2.r1-02500-89xx.0' " \

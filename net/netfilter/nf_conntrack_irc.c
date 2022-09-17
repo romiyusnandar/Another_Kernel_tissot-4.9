@@ -357,6 +357,7 @@ static int help(struct sk_buff *skb, unsigned int protoff,
 		while (data < data_limit - (5 + MINLENNICK)) {
 			if (memcmp(data, "NICK ", 5)) {
 				data++;
+
 				continue;
 			}
 			data += 5;

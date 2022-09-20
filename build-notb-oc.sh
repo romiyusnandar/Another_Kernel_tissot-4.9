@@ -31,7 +31,7 @@ REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Cakeby"
-RELEASE_VERSION="v3.2"
+RELEASE_VERSION="v3.3"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="9 - 13"
@@ -144,5 +144,11 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstreamed to 4.9.327" \
-    "-Merged tag to 'LA.UM.10.6.2.r1-02500-89xx.0' " \
+    "-Upstreamed to 4.9.328" \
+   # "-Add LMK" \
+   # "-Change zram size to 2gb" \
+   # "-Very many misc. improvement"
+
+    echo "........................"
+    echo ".    Build Finished    ."
+    echo "........................"

@@ -31,7 +31,7 @@ REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Cakeby"
-RELEASE_VERSION="v3.3"
+RELEASE_VERSION="v3.4"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="9 - 13"
@@ -126,6 +126,10 @@ packingkernel() {
 
     # Ship it to the CI channel
     "${TELEGRAM}" -f "$ZIPNAME" -t "${TELEGRAM_TOKEN}" -c "${CHATIDQ}" 
+
+    echo "........................"
+    echo ".     Upload  success   ."
+    echo "........................"
 }
 
 # Starting
@@ -144,11 +148,11 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstreamed to 4.9.328" \
+    "-Upstreamed to 4.9.329" \
    # "-Add LMK" \
    # "-Change zram size to 2gb" \
    # "-Very many misc. improvement"
 
-    echo "........................"
-    echo ".    Build Finished    ."
-    echo "........................"
+    echo "=========================="
+    echo "=    Build Finished    ="
+    echo "=========================="

@@ -9,15 +9,15 @@ KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz
 KERN_DTB_NONTB="${KERNEL_DIR}"/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-nontreble.dtb
 KERN_DTB_TB="${KERNEL_DIR}"/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-treble.dtb
 ANYKERNEL="${HOME}"/Build/kernel/anykernel
-COMPILER_STRING="xRageTC-clang 15.0"
+COMPILER_STRING="gabuters-clang"
 
 # Repo URL
-CLANG_REPO="https://github.com/silont-project/silont-clang.git"
+CLANG_REPO="https://github.com/Gabuters-Dev/gabuters-clang.git"
 ANYKERNEL_REPO="https://github.com/Anothermi1/Anykernel3-tissot.git" 
-ANYKERNEL_BRANCH="Pure"
+ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
-CLANG_DIR="${HOME}"/Build/kernel/xRageTC-clang
+CLANG_DIR="${HOME}"/Build/kernel/gabuters-clang
 if ! [ -d "${CLANG_DIR}" ]; then
     git clone "$CLANG_REPO" --depth=1 "$CLANG_DIR"
 fi
@@ -34,14 +34,14 @@ KERNEL="Cakeby"
 RELEASE_VERSION="3.0.4"
 DEVICE="Tissot"
 KERNELTYPE="NonOC-NonTreble"
-KERNEL_SUPPORT="Android 9 - 12.1"
+KERNEL_SUPPORT="Android 9 - 13"
 KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
 
 # Telegram
-CHATIDQ="-1001327944468"
-CHATID="-1001327944468" # Group/channel chatid (use rose/userbot to get it)
+CHATIDQ="-1001642730931"
+CHATID="-1001642730931" # Group/channel chatid (use rose/userbot to get it)
 TELEGRAM_TOKEN="5136791856:AAGY5TeaVoeJbd6a2BAlxAjOc-MFWOJzZds" # Get from botfather
 
 # Export Telegram.sh
@@ -73,7 +73,7 @@ makekernel() {
     echo ".........................."
     echo ".     Building Kernel    ."
     echo ".........................."
-    export PATH="${HOME}"/Build/kernel/xRageTC-clang/bin:$PATH
+    export PATH="${HOME}"/Build/kernel/gabuters-clang/bin:$PATH
 #    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
 #    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation
@@ -103,13 +103,13 @@ packingkernel() {
     if [ -d "${ANYKERNEL}" ]; then
         rm -rf "${ANYKERNEL}"
     fi
-    git clone "$ANYKERNEL_REPO" -b "$ANYKERNEL_BRANCH" --depth=1 "${ANYKERNEL}"
-        mkdir "${ANYKERNEL}"/kernel/
-        cp "${KERN_IMG}" "${ANYKERNEL}"/kernel/Image.gz
-        mkdir "${ANYKERNEL}"/dtb-nontreble/
-        cp "${KERN_DTB_NONTB}" "${ANYKERNEL}"/dtb-nontreble/msm8953-qrd-sku3-tissot-nontreble.dtb
-    mkdir "${ANYKERNEL}"/dtb-treble/
-        cp "${KERN_DTB_NONTB}" "${ANYKERNEL}"/dtb-treble/msm8953-qrd-sku3-tissot-nontreble.dtb
+    git clone "$ANYKERNEL_REPO" -b "$ANYKERNEL_BRANCH" "${ANYKERNEL}"
+     #   mkdir "${ANYKERNEL}"/kernel/
+        cp "${KERN_IMG}" "${ANYKERNEL}"/Image.gz-dtb
+   #     mkdir "${ANYKERNEL}"/dtb-nontreble/
+  #      cp "${KERN_DTB_NONTB}" "${ANYKERNEL}"/dtb-nontreble/msm8953-qrd-sku3-tissot-nontreble.dtb
+  #  mkdir "${ANYKERNEL}"/dtb-treble/
+   #     cp "${KERN_DTB_NONTB}" "${ANYKERNEL}"/dtb-treble/msm8953-qrd-sku3-tissot-nontreble.dtb
 
     # Zip the kernel, or fail
     cd "${ANYKERNEL}" || exit
@@ -136,10 +136,11 @@ makekernel
 packingkernel
 END=$(TZ=Asia/Jakarta date +"%s")
 DIFF=$(( END - START ))
-tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
+tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @zh4ntech"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Disable 'ftrace' to reduce battery drain" \
-    "-Set USB fast charge by default" \
-    "-Move compiler to xRageTC-clang 15.0" \
-    "-Very many misc. improvement"
+    "-Upstremed Kernel to 4.9.330"
+
+    echo "........................"
+    echo ".    Build Finished    ."
+    echo "........................"

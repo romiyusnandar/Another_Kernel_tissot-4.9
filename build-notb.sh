@@ -13,7 +13,7 @@ COMPILER_STRING="gabuters-clang"
 
 # Repo URL
 CLANG_REPO="https://github.com/Gabuters-Dev/gabuters-clang.git"
-ANYKERNEL_REPO="https://github.com/Anothermi1/Anykernel3-tissot.git" 
+ANYKERNEL_REPO="https://github.com/zhantech/Anykernel3-tissot.git" 
 ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
@@ -30,8 +30,8 @@ DEFCONFIG="tissot_defconfig"
 REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 
 # Costumize
-KERNEL="Cakeby"
-RELEASE_VERSION="3.0.4"
+KERNEL="Pringgodani"
+RELEASE_VERSION="1.1"
 DEVICE="Tissot"
 KERNELTYPE="NonOC-NonTreble"
 KERNEL_SUPPORT="Android 9 - 13"
@@ -139,7 +139,7 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @zh4ntech"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstremed Kernel to 4.9.330"
+    "-Upstremed Kernel to 4.9.331"
 
     echo "........................"
     echo ".    Build Finished    ."

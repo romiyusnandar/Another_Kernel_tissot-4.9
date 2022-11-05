@@ -31,7 +31,7 @@ REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Cakeby"
-RELEASE_VERSION="v3.4"
+RELEASE_VERSION="v3.5"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="9 - 13"
@@ -91,7 +91,7 @@ makekernel() {
         END=$(TZ=Asia/Jakarta date +"%s")
         DIFF=$(( END - START ))
         echo -e "Kernel compilation failed, See buildlog to fix errors"
-        tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @ItsMeKakashii"
+        tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @romiyusnandar"
         exit 1
     fi
 }
@@ -145,10 +145,10 @@ makekernel
     packingkernel
 END=$(TZ=Asia/Jakarta date +"%s")
 DIFF=$(( END - START ))
-tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @ItsMeKakashii"
+tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @romiyusnandar"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstreamed to 4.9.329" \
+    "-Upstreamed to 4.9.330" \
    # "-Add LMK" \
    # "-Change zram size to 2gb" \
    # "-Very many misc. improvement"

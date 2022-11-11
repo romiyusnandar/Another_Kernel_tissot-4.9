@@ -27,21 +27,21 @@ fi
 
 # Defconfig
 DEFCONFIG="tissot_defconfig"
-REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
+REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Pringgodani"
-RELEASE_VERSION="1.1"
+RELEASE_VERSION="1.2"
 DEVICE="Tissot"
 KERNELTYPE="NonOC-NonTreble"
-KERNEL_SUPPORT="Android 9 - 13"
+KERNEL_SUPPORT="12L - 13"
 KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
 
 # Telegram
-CHATIDQ="-1001642730931"
-CHATID="-1001642730931" # Group/channel chatid (use rose/userbot to get it)
+CHATIDQ="-1001864118331"
+CHATID="-1001864118331" # Group/channel chatid (use rose/userbot to get it)
 TELEGRAM_TOKEN="5136791856:AAGY5TeaVoeJbd6a2BAlxAjOc-MFWOJzZds" # Get from botfather
 
 # Export Telegram.sh
@@ -89,7 +89,7 @@ makekernel() {
         END=$(TZ=Asia/Jakarta date +"%s")
         DIFF=$(( END - START ))
         echo -e "Kernel compilation failed, See buildlog to fix errors"
-        tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @ItsMeKakashii"
+        tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @zh4ntech"
         exit 1
     fi
 }
@@ -139,7 +139,8 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @zh4ntech"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstremed Kernel to 4.9.331"
+    "-Upstremed Kernel to 4.9.333" \
+    "-Enable LLVM Polly" \
 
     echo "........................"
     echo ".    Build Finished    ."

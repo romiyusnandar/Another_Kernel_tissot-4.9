@@ -5,9 +5,7 @@
 
 # Init
 KERNEL_DIR="${PWD}"
-KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz
-KERN_DTB_NONTB="${KERNEL_DIR}"/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-nontreble.dtb
-KERN_DTB_TB="${KERNEL_DIR}"/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-treble.dtb
+KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz-dtb
 ANYKERNEL="${HOME}"/Build/kernel/anykernel
 COMPILER_STRING="gabuters-clang"
 

@@ -7,17 +7,17 @@
 KERNEL_DIR="${PWD}"
 KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz-dtb
 ANYKERNEL="${HOME}"/Build/kernel/anykernel
-COMPILER_STRING="gabuters-clang"
+COMPILER_STRING="yuki-clang-16"
 
 # Repo URL
-CLANG_REPO="https://github.com/Gabuters-Dev/gabuters-clang.git"
+CLANG_REPO="https://gitlab.com/klozz/yuki-clang-new"
 ANYKERNEL_REPO="https://github.com/zhantech/Anykernel3-tissot.git" 
 ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
-CLANG_DIR="${HOME}"/Build/kernel/gabuters-clang
+CLANG_DIR="${HOME}"/Build/kernel/yuki-clang
 if ! [ -d "${CLANG_DIR}" ]; then
-    git clone "$CLANG_REPO" --depth=1 "$CLANG_DIR"
+    git clone "$CLANG_REPO" -b 16.0.0 --depth=1 "$CLANG_DIR"
 fi
 
 # git clone https://github.com/baalajimaestro/aarch64-maestro-linux-android.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc"
@@ -71,7 +71,7 @@ makekernel() {
     echo ".........................."
     echo ".     Building Kernel    ."
     echo ".........................."
-    export PATH="${HOME}"/Build/kernel/gabuters-clang/bin:$PATH
+    export PATH="${HOME}"/Build/kernel/yuki-clang/bin:$PATH
 #    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
 #    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation

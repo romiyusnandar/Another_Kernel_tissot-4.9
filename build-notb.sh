@@ -7,17 +7,17 @@
 KERNEL_DIR="${PWD}"
 KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz-dtb
 ANYKERNEL="${HOME}"/Build/kernel/anykernel
-COMPILER_STRING="yuki-clang-16"
+COMPILER_STRING="Proton Clang 15.0.0"
 
 # Repo URL
-CLANG_REPO="https://gitlab.com/klozz/yuki-clang-new"
+CLANG_REPO="https://gitlab.com/LeCmnGend/proton-clang"
 ANYKERNEL_REPO="https://github.com/zhantech/Anykernel3-tissot.git" 
 ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
-CLANG_DIR="${HOME}"/Build/kernel/yuki-clang
+CLANG_DIR="${HOME}"/Build/kernel/clang-proton
 if ! [ -d "${CLANG_DIR}" ]; then
-    git clone "$CLANG_REPO" -b 16.0.0 --depth=1 "$CLANG_DIR"
+    git clone "$CLANG_REPO" -b clang-15 --depth=1 "$CLANG_DIR"
 fi
 
 # git clone https://github.com/baalajimaestro/aarch64-maestro-linux-android.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc"
@@ -71,7 +71,7 @@ makekernel() {
     echo ".........................."
     echo ".     Building Kernel    ."
     echo ".........................."
-    export PATH="${HOME}"/Build/kernel/yuki-clang/bin:$PATH
+    export PATH="${HOME}"/Build/kernel/clang-proton/bin:$PATH
 #    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
 #    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation
@@ -137,8 +137,8 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @zh4ntech"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstremed Kernel to 4.9.333" \
-    "-Enable LLVM Polly" \
+    "- Compile with Proton Clang 15.0.0" \
+ #   "" \
 
     echo "........................"
     echo ".    Build Finished    ."

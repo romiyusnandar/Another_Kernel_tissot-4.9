@@ -29,10 +29,10 @@ REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Pringgodani"
-RELEASE_VERSION="1.2"
+RELEASE_VERSION="1.3"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
-KERNEL_SUPPORT="12L - 13"
+KERNEL_SUPPORT="10 - 13"
 KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
@@ -138,7 +138,8 @@ tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF
 
 tg_cast  "<b>Changelog :</b>" \
     "- Compile with Proton Clang 15.0.0" \
- #   "" \
+    "- Upstremed Kernel to 4.9.334" \
+    "- More Changelogs : https://github.com/zhantech/android_kernel_msm8953/commits/Pringgodani-OC"
 
     echo "........................"
     echo ".    Build Finished    ."

@@ -29,7 +29,7 @@ REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Pringgodani"
-RELEASE_VERSION="1.5"
+RELEASE_VERSION="1.6"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="10 - 13"
@@ -138,8 +138,8 @@ tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF
 
 tg_cast  "<b>Changelog :</b>" \
     "- Compile with Proton Clang 15.0.0" \
-    "- Bump 1.5" \
-    "- Upstremed Kernel to 4.9.335, 4.9.336" \
+    "- Bump 1.6" \
+    "- Upstremed Kernel to 4.9.337" \
     "- More Changelogs : https://github.com/zhantech/android_kernel_msm8953/commits/Pringgodani-OC"
 
     echo "........................"

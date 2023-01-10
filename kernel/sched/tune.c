@@ -6,6 +6,7 @@
 #include <linux/kernel.h>
 #include <linux/rcupdate.h>
 #include <linux/slab.h>
+#include <linux/battery_saver.h>
 #include <trace/events/sched.h>
 #include <linux/list.h>
 
@@ -349,7 +350,7 @@ schedtune_accept_deltas(int nrg_delta, int cap_delta,
  *    implementation especially for the computation of the per-CPU boost
  *    value
  */
-#define BOOSTGROUPS_COUNT 5
+#define BOOSTGROUPS_COUNT 8
 
 /* Array of configured boostgroups */
 static struct schedtune *allocated_group[BOOSTGROUPS_COUNT] = {
@@ -541,12 +542,13 @@ schedtune_tasks_update(struct task_struct *p, int cpu, int idx, int task_count)
 	/* Update boosted tasks count while avoiding to make it negative */
 	bg->group[idx].tasks = max(0, tasks);
 
-	trace_sched_tune_tasks_update(p, cpu, tasks, idx,
-			bg->group[idx].boost, bg->boost_max);
-
 	/* Boost group activation or deactivation on that RQ */
 	if (tasks == 1 || tasks == 0)
 		schedtune_cpu_update(cpu);
+
+	trace_sched_tune_tasks_update(p, cpu, tasks, idx,
+			bg->group[idx].boost, bg->boost_max);
+
 }
 
 /*
@@ -805,18 +807,36 @@ int schedtune_cpu_boost(int cpu)
 	return bg->boost_max;
 }
 
-int schedtune_task_boost(struct task_struct *p)
+static inline int schedtune_adj_ta(struct task_struct *p)
 {
 	struct schedtune *st;
+	char name_buf[NAME_MAX + 1];
+	int adj = p->signal->oom_score_adj;
+
+	/* Don't touch kthreads */
+	if (p->flags & PF_KTHREAD)
+		return 0;
+
+	st = task_schedtune(p);
+	cgroup_name(st->css.cgroup, name_buf, sizeof(name_buf));
+	if (!strncmp(name_buf, "top-app", strlen("top-app"))) {
+		pr_debug("top app is %s with adj %i\n", p->comm, adj);
+		return adj == 0 ? 10 : 1;
+	}
+
+	return 0;
+}
+
+int schedtune_task_boost(struct task_struct *p)
+{
 	int task_boost;
 
-	if (!unlikely(schedtune_initialized))
+	if (!unlikely(schedtune_initialized) || unlikely(is_battery_saver_on()))
 		return 0;
 
 	/* Get task boost value */
 	rcu_read_lock();
-	st = task_schedtune(p);
-	task_boost = st->boost;
+	task_boost = schedtune_adj_ta(p);
 	rcu_read_unlock();
 
 	return task_boost;
@@ -827,7 +847,7 @@ int schedtune_prefer_idle(struct task_struct *p)
 	struct schedtune *st;
 	int prefer_idle;
 
-	if (!unlikely(schedtune_initialized))
+	if (!unlikely(schedtune_initialized) || unlikely(is_battery_saver_on()))
 		return 0;
 
 	/* Get prefer_idle value */
@@ -843,6 +863,9 @@ static u64
 prefer_idle_read(struct cgroup_subsys_state *css, struct cftype *cft)
 {
 	struct schedtune *st = css_st(css);
+
+	if (unlikely(is_battery_saver_on()))
+		return 0;
 
 	return st->prefer_idle;
 }
@@ -861,6 +884,9 @@ static s64
 boost_read(struct cgroup_subsys_state *css, struct cftype *cft)
 {
 	struct schedtune *st = css_st(css);
+
+	if (unlikely(is_battery_saver_on()))
+		return 0;
 
 	return st->boost;
 }
@@ -895,6 +921,10 @@ boost_write(struct cgroup_subsys_state *css, struct cftype *cft,
 	struct schedtune *st = css_st(css);
 	unsigned threshold_idx;
 	int boost_pct;
+
+	/* Don't let userspace boost top-app's stune boost upon interaction */
+	if (!memcmp(css->cgroup->kn->name, "top-app", sizeof("top-app")))
+		boost = 10;
 
 	if (boost < -100 || boost > 100)
 		return -EINVAL;

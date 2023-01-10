@@ -22,9 +22,12 @@ ccflags-y += $(DISABLE_LTO)
 
 # Force -O2 to avoid libgcc dependencies
 CFLAGS_REMOVE_vgettimeofday.o = -pg -Os
-CFLAGS_vgettimeofday.o = -O2 -fPIC
+CFLAGS_vgettimeofday.o = -fPIC -fasynchronous-unwind-tables
 ifneq ($(cc-name),clang)
 CFLAGS_vgettimeofday.o += -mcmodel=tiny
+CFLAGS_vgettimeofday.o = -O2
+else
+CFLAGS_vgettimeofday.o = -O3
 endif
 
 # Disable gcov profiling for VDSO code
@@ -72,7 +75,8 @@ $(obj-vdso-c): %.o: %.c FORCE
 
 # Actual build commands
 quiet_cmd_vdsold = VDSOL   $@
-      cmd_vdsold = $(CC) $(c_flags) -Wl,-n -Wl,-T $^ -o $@
+      cmd_vdsold = $(CC) $(c_flags) $(call cc-ldoption, -Wl$(comma)-n) \
+						-Wl$(comma)-T $^ -o $@
 quiet_cmd_vdsocc = VDSOC   $@
       cmd_vdsocc = ${CC} $(c_flags) -c -o $@ $<
 quiet_cmd_vdsoas = VDSOA   $@

@@ -31,7 +31,7 @@ REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 KERNEL="Another_Kernel"
 RELEASE_VERSION="OC [Fantasy]"
 DEVICE="Tissot"
-KERNELTYPE="NonOC-NonTreble"
+KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="10 - 13"
 KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"

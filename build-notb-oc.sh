@@ -6,20 +6,18 @@
 # Init
 KERNEL_DIR="${PWD}"
 KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz-dtb
-KERN_DTB_NONTB="${KERNEL_DIR}"/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-nontreble.dtb
-KERN_DTB_TB="${KERNEL_DIR}"/out/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3-tissot-treble.dtb
 ANYKERNEL="${HOME}"/Build/kernel/anykernel
-COMPILER_STRING="xRageTC-clang 15.0"
+COMPILER_STRING="Neutron Clang 17.0"
 
 # Repo URL
-#CLANG_REPO="https://github.com/silont-project/silont-clang.git"
-ANYKERNEL_REPO="https://github.com/Anothermi1/Anykernel3-tissot.git" 
+#CLANG_REPO="https://gitlab.com/LeCmnGend/proton-clang"
+ANYKERNEL_REPO="https://github.com/Anothermi1/Anykernel3.git" 
 ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
-CLANG_DIR="${HOME}"/Build/kernel/xRageTC-clang
+CLANG_DIR="${HOME}"/clang17
 #if ! [ -d "${CLANG_DIR}" ]; then
-#    git clone "$CLANG_REPO" --depth=1 "$CLANG_DIR"
+#    git clone "$CLANG_REPO" -b clang-15 --depth=1 "$CLANG_DIR"
 #fi
 
 # git clone https://github.com/baalajimaestro/aarch64-maestro-linux-android.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc"
@@ -27,16 +25,15 @@ CLANG_DIR="${HOME}"/Build/kernel/xRageTC-clang
 
 # Defconfig
 DEFCONFIG="tissot_defconfig"
-REGENERATE_DEFCONFIG="true" # unset if don't want to regenerate defconfig
+REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 
 # Costumize
-KERNEL="Cakeby"
-RELEASE_VERSION="v3.5"
+KERNEL="Another_Kernel"
+RELEASE_VERSION="OC [Fantasy]"
 DEVICE="Tissot"
-KERNELTYPE="OC-NonTreble"
-KERNEL_SUPPORT="9 - 13"
-KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-${RELEASE_VERSION}"
-# KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
+KERNELTYPE="NonOC-NonTreble"
+KERNEL_SUPPORT="10 - 13"
+KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(TZ=Asia/Jakarta date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
 
@@ -67,7 +64,6 @@ regenerate() {
     cp out/.config arch/arm64/configs/"${DEFCONFIG}"
     git add arch/arm64/configs/"${DEFCONFIG}"
     git commit -m "defconfig: Regenerate"
-    git push
 }
 
 # Building
@@ -75,7 +71,7 @@ makekernel() {
     echo ".........................."
     echo ".     Building Kernel    ."
     echo ".........................."
-    export PATH="${HOME}"/Build/kernel/xRageTC-clang/bin:$PATH
+    export PATH="${HOME}"/clang17/bin:$PATH
 #    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
 #    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation
@@ -120,16 +116,9 @@ packingkernel() {
     # Sign the zip before sending it to Telegram
    # curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel2/master/zipsigner-3.0.jar
    # java -jar zipsigner-3.0.jar "${TEMPZIPNAME}" "${ZIPNAME}"
-    echo "........................"
-    echo ".    Uploading File    ."
-    echo "........................"
 
     # Ship it to the CI channel
     "${TELEGRAM}" -f "$ZIPNAME" -t "${TELEGRAM_TOKEN}" -c "${CHATIDQ}" 
-
-    echo "........................"
-    echo ".     Upload  success   ."
-    echo "........................"
 }
 
 # Starting
@@ -142,17 +131,17 @@ tg_cast "<b>STARTING KERNEL BUILD</b>" \
     "Android Supported: <code>${KERNEL_SUPPORT}</code>"
 START=$(TZ=Asia/Jakarta date +"%s")
 makekernel
-    packingkernel
+packingkernel
 END=$(TZ=Asia/Jakarta date +"%s")
 DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @romiyusnandar"
 
 tg_cast  "<b>Changelog :</b>" \
-    "-Upstreamed to 4.9.330" \
-   # "-Add LMK" \
-   # "-Change zram size to 2gb" \
-   # "-Very many misc. improvement"
+    "- soon" \
+   # "- Bump 1.7" \
+   # "- Upstremed Kernel to 4.9.337" \
+   # "- More Changelogs : https://github.com/zhantech/android_kernel_msm8953/commits/Pringgodani"
 
-    echo "=========================="
-    echo "=    Build Finished    ="
-    echo "=========================="
+    echo "........................"
+    echo ".    Build Finished    ."
+    echo "........................"

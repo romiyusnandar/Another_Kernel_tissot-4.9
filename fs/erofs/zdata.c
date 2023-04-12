@@ -807,6 +807,7 @@ static void z_erofs_decompressqueue_endio(struct bio *bio)
 {
 	tagptr1_t t = tagptr_init(tagptr1_t, bio->bi_private);
 	struct z_erofs_decompressqueue *q = tagptr_unfold_ptr(t);
+	blk_status_t err = bio->bi_status;
 	struct bio_vec *bvec;
 	unsigned int i;
 
@@ -816,11 +817,11 @@ static void z_erofs_decompressqueue_endio(struct bio *bio)
 		DBG_BUGON(PageUptodate(page));
 		DBG_BUGON(z_erofs_page_is_invalidated(page));
 
-		if (bio->bi_error)
+		if (err)
 			SetPageError(page);
 
 		if (erofs_page_is_managed(EROFS_SB(q->sb), page)) {
-			if (!bio->bi_error)
+			if (!err)
 				SetPageUptodate(page);
 			unlock_page(page);
 		}

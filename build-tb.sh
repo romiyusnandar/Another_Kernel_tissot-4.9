@@ -6,16 +6,16 @@
 # Init
 KERNEL_DIR="${PWD}"
 KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz-dtb
-ANYKERNEL="${HOME}"/Build/kernel/anykernel
-COMPILER_STRING="Neutron Clang 17.0"
+ANYKERNEL="/workspaces/anykernel"
+COMPILER_STRING="Proton Clang 15"
 
 # Repo URL
 #CLANG_REPO="https://gitlab.com/LeCmnGend/proton-clang"
-ANYKERNEL_REPO="https://github.com/Anothermi1/Anykernel3.git" 
+ANYKERNEL_REPO="https://github.com/Yusna21/Anykernel3.git" 
 ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
-CLANG_DIR="${HOME}"/clang17
+CLANG_DIR="/workspaces/clang"
 #if ! [ -d "${CLANG_DIR}" ]; then
 #    git clone "$CLANG_REPO" -b clang-15 --depth=1 "$CLANG_DIR"
 #fi
@@ -29,7 +29,7 @@ REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Another_Kernel"
-RELEASE_VERSION="Fantasy"
+RELEASE_VERSION="Gore"
 DEVICE="Tissot"
 KERNELTYPE="NonOC-Treble"
 KERNEL_SUPPORT="10 - 13"
@@ -38,14 +38,14 @@ TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
 
 # Telegram
-CHATIDQ="-1001597724605"
-CHATID="-1001597724605" # Group/channel chatid (use rose/userbot to get it)
+CHATIDQ="-1001930168269"
+CHATID="-1001930168269" # Group/channel chatid (use rose/userbot to get it)
 TELEGRAM_TOKEN="5136791856:AAGY5TeaVoeJbd6a2BAlxAjOc-MFWOJzZds" # Get from botfather
 
 # Export Telegram.sh
-TELEGRAM_FOLDER="${HOME}"/telegram
+TELEGRAM_FOLDER="/workspaces/telegram"
 if ! [ -d "${TELEGRAM_FOLDER}" ]; then
-    git clone https://github.com/Anothermi1/telegram.sh/ "${TELEGRAM_FOLDER}"
+    git clone https://github.com/Yusna21/telegram.sh/ "${TELEGRAM_FOLDER}"
 fi
 
 TELEGRAM="${TELEGRAM_FOLDER}"/telegram
@@ -71,7 +71,7 @@ makekernel() {
     echo ".........................."
     echo ".     Building Kernel    ."
     echo ".........................."
-    export PATH="${HOME}"/clang17/bin:$PATH
+    export PATH="/workspaces/clang/bin:$PATH"
 #    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
 #    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation
@@ -137,8 +137,8 @@ DIFF=$(( END - START ))
 tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @romiyusnandar"
 
 tg_cast  "<b>Changelog :</b>" \
-    "- soon" \
-   # "- Bump 1.7" \
+    "- Bump new version" \
+    "- Add kernelsu support" \
    # "- Upstremed Kernel to 4.9.337" \
    # "- More Changelogs : https://github.com/zhantech/android_kernel_msm8953/commits/Pringgodani"
 

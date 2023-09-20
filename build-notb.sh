@@ -6,19 +6,19 @@
 # Init
 KERNEL_DIR="${PWD}"
 KERN_IMG="${KERNEL_DIR}"/out/arch/arm64/boot/Image.gz-dtb
-ANYKERNEL="${HOME}"/Build/kernel/anykernel
-COMPILER_STRING="Proton Clang 15.0.0"
+ANYKERNEL="${HOME}"/workspaces/anykernel
+COMPILER_STRING="Proton Clang 15"
 
 # Repo URL
-CLANG_REPO="https://gitlab.com/LeCmnGend/proton-clang"
-ANYKERNEL_REPO="https://github.com/zhantech/Anykernel3-tissot.git" 
+#CLANG_REPO="https://gitlab.com/LeCmnGend/proton-clang"
+ANYKERNEL_REPO="https://github.com/Yusna21/Anykernel3.git" 
 ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
-CLANG_DIR="${HOME}"/Build/kernel/clang-proton
-if ! [ -d "${CLANG_DIR}" ]; then
-    git clone "$CLANG_REPO" -b clang-15 --depth=1 "$CLANG_DIR"
-fi
+CLANG_DIR="${HOME}"/workspaces/clang
+#if ! [ -d "${CLANG_DIR}" ]; then
+#    git clone "$CLANG_REPO" -b clang-15 --depth=1 "$CLANG_DIR"
+#fi
 
 # git clone https://github.com/baalajimaestro/aarch64-maestro-linux-android.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc"
 # git clone https://github.com/baalajimaestro/arm-maestro-linux-gnueabi.git -b 07032020-9.2.1 --depth=1 "${KERNEL_DIR}/gcc32"
@@ -28,8 +28,8 @@ DEFCONFIG="tissot_defconfig"
 REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 
 # Costumize
-KERNEL="Pringgodani"
-RELEASE_VERSION="1.6"
+KERNEL="Another_Kernel"
+RELEASE_VERSION="Gore"
 DEVICE="Tissot"
 KERNELTYPE="OC-NonTreble"
 KERNEL_SUPPORT="10 - 13"
@@ -38,14 +38,14 @@ TEMPZIPNAME="${KERNELNAME}.zip"
 ZIPNAME="${KERNELNAME}.zip"
 
 # Telegram
-CHATIDQ="-1001308839345"
-CHATID="-1001308839345" # Group/channel chatid (use rose/userbot to get it)
+CHATIDQ="-1001930168269"
+CHATID="-1001930168269" # Group/channel chatid (use rose/userbot to get it)
 TELEGRAM_TOKEN="5136791856:AAGY5TeaVoeJbd6a2BAlxAjOc-MFWOJzZds" # Get from botfather
 
 # Export Telegram.sh
-TELEGRAM_FOLDER="${HOME}"/telegram
+TELEGRAM_FOLDER="${HOME}"/workspaces/telegram
 if ! [ -d "${TELEGRAM_FOLDER}" ]; then
-    git clone https://github.com/Anothermi1/telegram.sh/ "${TELEGRAM_FOLDER}"
+    git clone https://github.com/Yusna21/telegram.sh/ "${TELEGRAM_FOLDER}"
 fi
 
 TELEGRAM="${TELEGRAM_FOLDER}"/telegram
@@ -71,7 +71,7 @@ makekernel() {
     echo ".........................."
     echo ".     Building Kernel    ."
     echo ".........................."
-    export PATH="${HOME}"/Build/kernel/clang-proton/bin:$PATH
+    export PATH="/workspaces/clang/bin:$PATH"
 #    export CROSS_COMPILE=${KERNEL_DIR}/gcc/bin/aarch64-maestro-linux-gnu-
 #    export CROSS_COMPILE_ARM32=${KERNEL_DIR}/gcc32/bin/arm-maestro-linux-gnueabi-
     rm -rf "${KERNEL_DIR}"/out/arch/arm64/boot # clean previous compilation
@@ -87,7 +87,7 @@ makekernel() {
         END=$(TZ=Asia/Jakarta date +"%s")
         DIFF=$(( END - START ))
         echo -e "Kernel compilation failed, See buildlog to fix errors"
-        tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @zh4ntech"
+        tg_cast "Build for ${DEVICE} <b>failed</b> in $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! Check Instance for errors @romiyusnandar"
         exit 1
     fi
 }
@@ -123,24 +123,24 @@ packingkernel() {
 
 # Starting
 tg_cast "<b>STARTING KERNEL BUILD</b>" \
-    "Device: ${DEVICE}" \
+    "Device: <code>${DEVICE}</code>" \
     "Kernel Name: <code>${KERNEL}</code>" \
     "Build Type: <code>${KERNELTYPE}</code>" \
-    "Release Version: ${RELEASE_VERSION}" \
+    "Release Version: <code>${RELEASE_VERSION}</code>" \
     "Linux Version: <code>$(make kernelversion)</code>" \
-    "Android Supported: ${KERNEL_SUPPORT}"
+    "Android Supported: <code>${KERNEL_SUPPORT}</code>"
 START=$(TZ=Asia/Jakarta date +"%s")
 makekernel
 packingkernel
 END=$(TZ=Asia/Jakarta date +"%s")
 DIFF=$(( END - START ))
-tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @zh4ntech"
+tg_cast "Build for ${DEVICE} with ${COMPILER_STRING} <b>succeed</b> took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)! by @romiyusnandar"
 
 tg_cast  "<b>Changelog :</b>" \
-    "- Compile with Proton Clang 15.0.0" \
-    "- Bump 1.6" \
-    "- Upstremed Kernel to 4.9.337" \
-    "- More Changelogs : https://github.com/zhantech/android_kernel_msm8953/commits/Pringgodani-OC"
+    "- Bump new version" \
+    "- Add kernelsu support" \
+   # "- Upstremed Kernel to 4.9.337" \
+   # "- More Changelogs : https://github.com/zhantech/android_kernel_msm8953/commits/Pringgodani"
 
     echo "........................"
     echo ".    Build Finished    ."

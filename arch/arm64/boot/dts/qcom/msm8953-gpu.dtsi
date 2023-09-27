@@ -68,7 +68,7 @@
 		qcom,id = <0>;
 		qcom,chipid = <0x05000600>;
 
-		qcom,initial-pwrlevel = <6>;
+		qcom,initial-pwrlevel = <5>;
 
 		qcom,idle-timeout = <64>; //msecs
 		qcom,deep-nap-timeout = <100>; //msecs
@@ -115,6 +115,10 @@
 		vddcx-supply = <&gdsc_oxili_cx>;
 		vdd-supply = <&gdsc_oxili_gx>;
 
+		/* CPU latency parameter */
+		qcom,pm-qos-active-latency = <213>;
+		qcom,pm-qos-wakeup-latency = <213>;
+
 		/* Quirks */
 		qcom,gpu-quirk-two-pass-use-wfi;
 		qcom,gpu-quirk-dp2clockgating-disable;
@@ -152,6 +156,25 @@
 			};
 		};
 
+		qcom,gpu-coresights {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "qcom,gpu-coresight";
+
+			/* Trace bus */
+			qcom,gpu-coresight@0 {
+				reg = <0>;
+				coresight-name = "coresight-gfx";
+				coresight-atid = <67>;
+				port {
+					gfx_out_funnel_mm: endpoint {
+						remote-endpoint =
+						<&funnel_mm_in_gfx>;
+					};
+				};
+			};
+		};
+
 		/* Power levels */
 		qcom,gpu-pwrlevels {
 			#address-cells = <1>;
@@ -167,7 +190,6 @@
 				qcom,bus-min = <10>;
 				qcom,bus-max = <10>;
 			};
-
 			/* TURBO */
 			qcom,gpu-pwrlevel@1 {
 				reg = <1>;
@@ -176,7 +198,6 @@
 				qcom,bus-min = <10>;
 				qcom,bus-max = <10>;
 			};
-
 			/* NOM+ */
 			qcom,gpu-pwrlevel@2 {
 				reg = <2>;
@@ -185,7 +206,6 @@
 				qcom,bus-min = <8>;
 				qcom,bus-max = <10>;
 			};
-
 			/* NOM */
 			qcom,gpu-pwrlevel@3 {
 				reg = <3>;
@@ -194,7 +214,6 @@
 				qcom,bus-min = <6>;
 				qcom,bus-max = <10>;
 			};
-
 			/* SVS+ */
 			qcom,gpu-pwrlevel@4 {
 				reg = <4>;
@@ -203,16 +222,14 @@
 				qcom,bus-min = <5>;
 				qcom,bus-max = <8>;
 			};
-
-		       /* SVS */
+			/* SVS */
 			qcom,gpu-pwrlevel@5 {
 				reg = <5>;
 				qcom,gpu-freq = <320000000>;
 				qcom,bus-freq = <4>;
 				qcom,bus-min = <2>;
-				qcom,bus-max = <8>;
+				qcom,bus-max = <6>;
 			};
-
 		       /* Low SVS */
 			qcom,gpu-pwrlevel@6 {
 				reg = <6>;
@@ -221,7 +238,7 @@
 				qcom,bus-min = <2>;
 				qcom,bus-max = <4>;
 			};
-				/* Min SVS */
+		       /* Min SVS */
 			qcom,gpu-pwrlevel@7 {
 				reg = <7>;
 				qcom,gpu-freq = <133300000>;

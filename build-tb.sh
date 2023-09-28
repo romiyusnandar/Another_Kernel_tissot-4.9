@@ -11,7 +11,7 @@ COMPILER_STRING="Proton Clang 15"
 
 # Repo URL
 #CLANG_REPO="https://gitlab.com/LeCmnGend/proton-clang"
-ANYKERNEL_REPO="https://github.com/Yusna21/Anykernel3.git" 
+ANYKERNEL_REPO="https://github.com/sirnewbies/Anykernel3.git" 
 ANYKERNEL_BRANCH="Anykernel3"
 
 # Compiler
@@ -29,7 +29,7 @@ REGENERATE_DEFCONFIG="false" # unset if don't want to regenerate defconfig
 
 # Costumize
 KERNEL="Another_Kernel"
-RELEASE_VERSION="Gore"
+RELEASE_VERSION="Hard"
 DEVICE="Tissot"
 KERNELTYPE="NonOC-Treble"
 KERNEL_SUPPORT="10 - 13"
@@ -45,7 +45,7 @@ TELEGRAM_TOKEN="5136791856:AAGY5TeaVoeJbd6a2BAlxAjOc-MFWOJzZds" # Get from botfa
 # Export Telegram.sh
 TELEGRAM_FOLDER="/workspaces/telegram"
 if ! [ -d "${TELEGRAM_FOLDER}" ]; then
-    git clone https://github.com/Yusna21/telegram.sh/ "${TELEGRAM_FOLDER}"
+    git clone https://github.com/sirnewbies/telegram.sh/ "${TELEGRAM_FOLDER}"
 fi
 
 TELEGRAM="${TELEGRAM_FOLDER}"/telegram
